@@ -1,5 +1,5 @@
 // API Base Configuration
-const API_BASE_URL = 'http://192.168.1.31:3001';
+const API_BASE_URL = process.env.API_BASE_URL || 'https://api.example.com';
 
 // Generic API helper
 class ApiClient {
