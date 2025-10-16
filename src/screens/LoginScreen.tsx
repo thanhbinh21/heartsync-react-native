@@ -13,7 +13,7 @@ export default function LoginScreen() {
 
   const handleLogin = () => {
     if (phone && password) {
-      navigation.navigate("Home");
+      navigation.navigate("CreateProfile");
     } else {
       Alert.alert("Please enter phone number and password");
     }

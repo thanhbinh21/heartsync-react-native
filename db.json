@@ -1,0 +1,528 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "name": "Emma Wilson",
+      "age": 25,
+      "email": "emma@example.com",
+      "phone": "+1234567890",
+      "photos": [
+        "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=400",
+        "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=401",
+        "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=402"
+      ],
+      "bio": "Love traveling and photography 📸. Always up for new adventures and meeting interesting people!",
+      "location": "New York, NY",
+      "distance": 2,
+      "job": "Marketing Manager",
+      "company": "Tech Solutions Inc.",
+      "education": "University of California",
+      "height": "5'6\"",
+      "zodiac": "Gemini",
+      "interests": [
+        "Travel",
+        "Photography",
+        "Art",
+        "Hiking",
+        "Food"
+      ],
+      "lifestyle": {
+        "smoking": "Never",
+        "drinking": "Socially",
+        "workout": "Often",
+        "diet": "Vegetarian"
+      },
+      "isOnline": true,
+      "lastActive": "2025-10-16T10:30:00Z",
+      "verified": true
+    },
+    {
+      "id": "2",
+      "name": "Sarah Johnson",
+      "age": 23,
+      "email": "sarah@example.com",
+      "phone": "+1234567891",
+      "photos": [
+        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400",
+        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=401",
+        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=402"
+      ],
+      "bio": "Fitness enthusiast and dog lover 🐕. Looking for someone who shares my passion for an active lifestyle!",
+      "location": "Los Angeles, CA",
+      "distance": 5,
+      "job": "Personal Trainer",
+      "company": "FitLife Gym",
+      "education": "UCLA",
+      "height": "5'4\"",
+      "zodiac": "Leo",
+      "interests": [
+        "Fitness",
+        "Dogs",
+        "Hiking",
+        "Music",
+        "Cooking"
+      ],
+      "lifestyle": {
+        "smoking": "Never",
+        "drinking": "Rarely",
+        "workout": "Daily",
+        "diet": "Paleo"
+      },
+      "isOnline": false,
+      "lastActive": "2025-10-16T08:15:00Z",
+      "verified": true
+    },
+    {
+      "id": "3",
+      "name": "Jessica Chen",
+      "age": 27,
+      "email": "jessica@example.com",
+      "phone": "+1234567892",
+      "photos": [
+        "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400",
+        "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=401",
+        "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=402"
+      ],
+      "bio": "Coffee addict ☕ and bookworm 📚. Love deep conversations and cozy evenings with a good book.",
+      "location": "San Francisco, CA",
+      "distance": 3,
+      "job": "Software Engineer",
+      "company": "Google",
+      "education": "Stanford University",
+      "height": "5'5\"",
+      "zodiac": "Virgo",
+      "interests": [
+        "Books",
+        "Coffee",
+        "Music",
+        "Tech",
+        "Art"
+      ],
+      "lifestyle": {
+        "smoking": "Never",
+        "drinking": "Socially",
+        "workout": "Sometimes",
+        "diet": "Vegetarian"
+      },
+      "isOnline": true,
+      "lastActive": "2025-10-16T11:00:00Z",
+      "verified": false
+    },
+    {
+      "id": "4",
+      "name": "Ashley Rodriguez",
+      "age": 26,
+      "email": "ashley@example.com",
+      "phone": "+1234567893",
+      "photos": [
+        "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400",
+        "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=401",
+        "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=402"
+      ],
+      "bio": "Artist and dreamer 🎨. Always looking for inspiration in everyday moments and new experiences.",
+      "location": "Chicago, IL",
+      "distance": 8,
+      "job": "Graphic Designer",
+      "company": "Creative Studios",
+      "education": "Art Institute of Chicago",
+      "height": "5'7\"",
+      "zodiac": "Pisces",
+      "interests": [
+        "Art",
+        "Design",
+        "Photography",
+        "Travel",
+        "Music"
+      ],
+      "lifestyle": {
+        "smoking": "Sometimes",
+        "drinking": "Socially",
+        "workout": "Often",
+        "diet": "No Preference"
+      },
+      "isOnline": true,
+      "lastActive": "2025-10-16T09:45:00Z",
+      "verified": true
+    }
+  ],
+  "matches": [
+    {
+      "id": "1",
+      "userId": "user_1",
+      "matchedUserId": "1",
+      "matchedAt": "2025-10-15T14:30:00Z",
+      "isActive": true,
+      "lastMessageId": "1"
+    },
+    {
+      "id": "2",
+      "userId": "user_1",
+      "matchedUserId": "2",
+      "matchedAt": "2025-10-14T16:20:00Z",
+      "isActive": true,
+      "lastMessageId": "3"
+    },
+    {
+      "id": "3",
+      "userId": "user_1",
+      "matchedUserId": "3",
+      "matchedAt": "2025-10-13T12:15:00Z",
+      "isActive": true,
+      "lastMessageId": null
+    },
+    {
+      "id": "1760635349860",
+      "userId": "user_1",
+      "matchedUserId": "1",
+      "matchedAt": "2025-10-16T17:22:29.860Z",
+      "isActive": true
+    },
+    {
+      "id": "1760635349869",
+      "userId": "1",
+      "matchedUserId": "user_1",
+      "matchedAt": "2025-10-16T17:22:29.860Z",
+      "isActive": true
+    }
+  ],
+  "messages": [
+    {
+      "id": "1",
+      "matchId": "1",
+      "senderId": "1",
+      "receiverId": "user_1",
+      "text": "Hey! How's your day going?",
+      "timestamp": "2025-10-16T10:30:00Z",
+      "isRead": true,
+      "messageType": "text"
+    },
+    {
+      "id": "2",
+      "matchId": "1",
+      "senderId": "user_1",
+      "receiverId": "1",
+      "text": "Hi! Going great, thanks for asking 😊 How about yours?",
+      "timestamp": "2025-10-16T10:35:00Z",
+      "isRead": true,
+      "messageType": "text"
+    },
+    {
+      "id": "3",
+      "matchId": "2",
+      "senderId": "2",
+      "receiverId": "user_1",
+      "text": "Thanks for the recommendation! 😊",
+      "timestamp": "2025-10-15T18:20:00Z",
+      "isRead": false,
+      "messageType": "text"
+    },
+    {
+      "id": "4",
+      "matchId": "1",
+      "senderId": "1",
+      "receiverId": "user_1",
+      "text": "Pretty good! I saw you're into photography. That's awesome!",
+      "timestamp": "2025-10-16T10:40:00Z",
+      "isRead": false,
+      "messageType": "text"
+    }
+  ],
+  "likes": [
+    {
+      "id": "1",
+      "userId": "user_1",
+      "likedUserId": "1",
+      "likeType": "like",
+      "timestamp": "2025-10-15T14:29:00Z"
+    },
+    {
+      "id": "2",
+      "userId": "1",
+      "likedUserId": "user_1",
+      "likeType": "like",
+      "timestamp": "2025-10-15T14:30:00Z"
+    },
+    {
+      "id": "3",
+      "userId": "user_1",
+      "likedUserId": "3",
+      "likeType": "super_like",
+      "timestamp": "2025-10-13T12:14:00Z"
+    },
+    {
+      "id": "1760635343321",
+      "userId": "user_1",
+      "likedUserId": "1",
+      "likeType": "pass",
+      "timestamp": "2025-10-16T17:22:23.321Z"
+    },
+    {
+      "id": "1760635345154",
+      "userId": "user_1",
+      "likedUserId": "2",
+      "likeType": "pass",
+      "timestamp": "2025-10-16T17:22:25.154Z"
+    },
+    {
+      "id": "1760635345988",
+      "userId": "user_1",
+      "likedUserId": "3",
+      "likeType": "pass",
+      "timestamp": "2025-10-16T17:22:25.988Z"
+    },
+    {
+      "id": "1760635348140",
+      "userId": "user_1",
+      "likedUserId": "4",
+      "likeType": "pass",
+      "timestamp": "2025-10-16T17:22:28.140Z"
+    },
+    {
+      "id": "1760635349823",
+      "userId": "user_1",
+      "likedUserId": "1",
+      "likeType": "super_like",
+      "timestamp": "2025-10-16T17:22:29.823Z"
+    },
+    {
+      "id": "1760635912489",
+      "userId": "user_1",
+      "likedUserId": "1",
+      "likeType": "pass",
+      "timestamp": "2025-10-16T17:31:52.489Z"
+    },
+    {
+      "id": "1760635915628",
+      "userId": "user_1",
+      "likedUserId": "2",
+      "likeType": "pass",
+      "timestamp": "2025-10-16T17:31:55.628Z"
+    },
+    {
+      "id": "1760635916539",
+      "userId": "user_1",
+      "likedUserId": "3",
+      "likeType": "pass",
+      "timestamp": "2025-10-16T17:31:56.539Z"
+    },
+    {
+      "id": "1760635917347",
+      "userId": "user_1",
+      "likedUserId": "4",
+      "likeType": "pass",
+      "timestamp": "2025-10-16T17:31:57.347Z"
+    },
+    {
+      "id": "1760635918716",
+      "userId": "user_1",
+      "likedUserId": "1",
+      "likeType": "pass",
+      "timestamp": "2025-10-16T17:31:58.716Z"
+    },
+    {
+      "id": "1760635953898",
+      "userId": "user_1",
+      "likedUserId": "2",
+      "likeType": "like",
+      "timestamp": "2025-10-16T17:32:33.898Z"
+    },
+    {
+      "id": "1760635955015",
+      "userId": "user_1",
+      "likedUserId": "3",
+      "likeType": "pass",
+      "timestamp": "2025-10-16T17:32:35.015Z"
+    },
+    {
+      "id": "1760636222144",
+      "userId": "user_1",
+      "likedUserId": "1",
+      "likeType": "pass",
+      "timestamp": "2025-10-16T17:37:02.144Z"
+    },
+    {
+      "id": "1760636236016",
+      "userId": "user_1",
+      "likedUserId": "2",
+      "likeType": "pass",
+      "timestamp": "2025-10-16T17:37:16.016Z"
+    },
+    {
+      "id": "1760636237183",
+      "userId": "user_1",
+      "likedUserId": "3",
+      "likeType": "pass",
+      "timestamp": "2025-10-16T17:37:17.183Z"
+    },
+    {
+      "id": "1760636238056",
+      "userId": "user_1",
+      "likedUserId": "4",
+      "likeType": "like",
+      "timestamp": "2025-10-16T17:37:18.056Z"
+    },
+    {
+      "id": "1760636239397",
+      "userId": "user_1",
+      "likedUserId": "1",
+      "likeType": "pass",
+      "timestamp": "2025-10-16T17:37:19.397Z"
+    },
+    {
+      "id": "1760636240317",
+      "userId": "user_1",
+      "likedUserId": "2",
+      "likeType": "pass",
+      "timestamp": "2025-10-16T17:37:20.317Z"
+    },
+    {
+      "id": "1760636241150",
+      "userId": "user_1",
+      "likedUserId": "3",
+      "likeType": "pass",
+      "timestamp": "2025-10-16T17:37:21.150Z"
+    },
+    {
+      "id": "1760636242462",
+      "userId": "user_1",
+      "likedUserId": "4",
+      "likeType": "pass",
+      "timestamp": "2025-10-16T17:37:22.462Z"
+    },
+    {
+      "id": "1760636243502",
+      "userId": "user_1",
+      "likedUserId": "1",
+      "likeType": "pass",
+      "timestamp": "2025-10-16T17:37:23.502Z"
+    },
+    {
+      "id": "1760636244387",
+      "userId": "user_1",
+      "likedUserId": "2",
+      "likeType": "pass",
+      "timestamp": "2025-10-16T17:37:24.387Z"
+    },
+    {
+      "id": "1760636247457",
+      "userId": "user_1",
+      "likedUserId": "3",
+      "likeType": "pass",
+      "timestamp": "2025-10-16T17:37:27.457Z"
+    },
+    {
+      "id": "1760636248233",
+      "userId": "user_1",
+      "likedUserId": "4",
+      "likeType": "pass",
+      "timestamp": "2025-10-16T17:37:28.233Z"
+    },
+    {
+      "id": "1760636482588",
+      "userId": "user_1",
+      "likedUserId": "1",
+      "likeType": "pass",
+      "timestamp": "2025-10-16T17:41:22.588Z"
+    },
+    {
+      "id": "1760636483562",
+      "userId": "user_1",
+      "likedUserId": "2",
+      "likeType": "pass",
+      "timestamp": "2025-10-16T17:41:23.562Z"
+    },
+    {
+      "id": "1760636484513",
+      "userId": "user_1",
+      "likedUserId": "3",
+      "likeType": "pass",
+      "timestamp": "2025-10-16T17:41:24.513Z"
+    }
+  ],
+  "notifications": [
+    {
+      "id": "1",
+      "userId": "user_1",
+      "type": "match",
+      "title": "It's a Match!",
+      "message": "You and Emma liked each other",
+      "data": {
+        "matchId": "1",
+        "userId": "1"
+      },
+      "isRead": false,
+      "timestamp": "2025-10-15T14:30:00Z"
+    },
+    {
+      "id": "2",
+      "userId": "user_1",
+      "type": "message",
+      "title": "New message from Emma",
+      "message": "Hey! How's your day going?",
+      "data": {
+        "matchId": "1",
+        "messageId": "1"
+      },
+      "isRead": false,
+      "timestamp": "2025-10-16T10:30:00Z"
+    },
+    {
+      "id": "3",
+      "userId": "user_1",
+      "type": "like",
+      "title": "Someone likes you!",
+      "message": "Sarah liked your profile",
+      "data": {
+        "userId": "2"
+      },
+      "isRead": true,
+      "timestamp": "2025-10-14T16:19:00Z"
+    }
+  ],
+  "profile": {
+    "id": "user_1",
+    "name": "Alex Thompson",
+    "age": 28,
+    "email": "alex@example.com",
+    "phone": "+1234567890",
+    "photos": [
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400",
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=401",
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=402"
+    ],
+    "bio": "Tech enthusiast and adventure seeker. Love exploring new places and trying different cuisines!",
+    "location": "Seattle, WA",
+    "job": "Product Manager",
+    "company": "Microsoft",
+    "education": "University of Washington",
+    "height": "6'0\"",
+    "zodiac": "Scorpio",
+    "interests": [
+      "Tech",
+      "Travel",
+      "Food",
+      "Hiking",
+      "Photography"
+    ],
+    "lifestyle": {
+      "smoking": "Never",
+      "drinking": "Socially",
+      "workout": "Often",
+      "diet": "No Preference"
+    },
+    "preferences": {
+      "ageRange": [
+        22,
+        32
+      ],
+      "maxDistance": 50,
+      "showMen": false,
+      "showWomen": true,
+      "showNonBinary": true
+    },
+    "isPremium": false,
+    "isVerified": true,
+    "createdAt": "2025-10-01T00:00:00Z",
+    "updatedAt": "2025-10-16T10:00:00Z"
+  }
+}
