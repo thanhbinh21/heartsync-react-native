@@ -4,189 +4,114 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Dimensions,
   Image,
-  Alert,
+  Dimensions,
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
 import type { RouteProp } from "@react-navigation/native";
 import { RootStackParamList } from "../../App";
+import { Ionicons } from "@expo/vector-icons";
 
 type NavProp = StackNavigationProp<RootStackParamList, "VideoCall">;
 type RoutePropType = RouteProp<RootStackParamList, "VideoCall">;
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
 
 export default function VideoCallScreen() {
   const navigation = useNavigation<NavProp>();
   const route = useRoute<RoutePropType>();
   const { user } = route.params;
   
-  const [isCallActive, setIsCallActive] = useState(false);
-  const [callDuration, setCallDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
-  const [isVideoOff, setIsVideoOff] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(true);
+  const [isCameraOff, setIsCameraOff] = useState(false);
+  const [callDuration, setCallDuration] = useState(0);
 
   useEffect(() => {
-    // Simulate connecting
-    const connectTimer = setTimeout(() => {
-      setIsConnecting(false);
-      setIsCallActive(true);
-    }, 3000);
+    const timer = setInterval(() => {
+      setCallDuration((prev) => prev + 1);
+    }, 1000);
 
-    return () => clearTimeout(connectTimer);
+    return () => clearInterval(timer);
   }, []);
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    
-    if (isCallActive) {
-      interval = setInterval(() => {
-        setCallDuration(prev => prev + 1);
-      }, 1000);
-    }
-
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isCallActive]);
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const handleEndCall = () => {
-    Alert.alert(
-      "End Call",
-      "Are you sure you want to end the call?",
-      [
-        { text: "Cancel", style: "cancel" },
-        { 
-          text: "End Call", 
-          style: "destructive",
-          onPress: () => navigation.goBack()
-        }
-      ]
-    );
+  const endCall = () => {
+    navigation.goBack();
   };
-
-  const handleToggleMute = () => {
-    setIsMuted(!isMuted);
-  };
-
-  const handleToggleVideo = () => {
-    setIsVideoOff(!isVideoOff);
-  };
-
-  const handleSwitchCamera = () => {
-    // Switch between front and back camera
-    Alert.alert("Camera", "Camera switched");
-  };
-
-  if (isConnecting) {
-    return (
-      <View style={styles.connectingContainer}>
-        <Image source={{ uri: user.photo }} style={styles.connectingAvatar} />
-        <Text style={styles.connectingName}>Calling {user.name}...</Text>
-        <Text style={styles.connectingStatus}>Connecting...</Text>
-        
-        <View style={styles.connectingButtons}>
-          <TouchableOpacity style={styles.endCallButton} onPress={() => navigation.goBack()}>
-            <Text style={styles.endCallIcon}>📞</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  }
 
   return (
     <View style={styles.container}>
-      {/* Remote video (main view) */}
-      <View style={styles.remoteVideoContainer}>
-        {!isVideoOff ? (
-          <Image source={{ uri: user.photo }} style={styles.remoteVideo} blurRadius={0} />
+      {/* Remote Video View */}
+      <View style={styles.remoteVideo}>
+        <Image
+          source={{ uri: user.photo }}
+          style={styles.remoteVideoBackground}
+          blurRadius={20}
+        />
+        <Image source={{ uri: user.photo }} style={styles.remoteVideoImage} />
+      </View>
+
+      {/* Local Video View (PiP) */}
+      <View style={styles.localVideo}>
+        {isCameraOff ? (
+          <View style={styles.cameraOffView}>
+            <Ionicons name="videocam-off" size={32} color="#fff" />
+          </View>
         ) : (
-          <View style={styles.videoOffContainer}>
-            <Image source={{ uri: user.photo }} style={styles.videoOffAvatar} />
-            <Text style={styles.videoOffText}>{user.name} turned off camera</Text>
+          <View style={styles.cameraOnView}>
+            <Text style={styles.cameraOnText}>You</Text>
           </View>
         )}
-        
-        {/* Call info overlay */}
-        <View style={styles.callInfoOverlay}>
+      </View>
+
+      {/* Top Info */}
+      <View style={styles.topInfo}>
+        <View style={styles.userInfoCard}>
+          <Text style={styles.userName}>{user.name}</Text>
           <Text style={styles.callDuration}>{formatDuration(callDuration)}</Text>
-          <Text style={styles.callStatus}>Connected</Text>
         </View>
       </View>
 
-      {/* Local video (picture-in-picture) */}
-      <View style={styles.localVideoContainer}>
-        {!isVideoOff ? (
-          <Image 
-            source={{ uri: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150" }} 
-            style={styles.localVideo} 
-          />
-        ) : (
-          <View style={styles.localVideoOff}>
-            <Text style={styles.localVideoOffIcon}>📷</Text>
-          </View>
-        )}
-      </View>
-
-      {/* User info */}
-      <View style={styles.userInfoOverlay}>
-        <Text style={styles.userName}>{user.name}</Text>
-      </View>
-
-      {/* Control buttons */}
-      <View style={styles.controlsContainer}>
-        <TouchableOpacity 
+      {/* Bottom Controls */}
+      <View style={styles.bottomControls}>
+        <TouchableOpacity
           style={[styles.controlButton, isMuted && styles.controlButtonActive]}
-          onPress={handleToggleMute}
+          onPress={() => setIsMuted(!isMuted)}
         >
-          <Text style={styles.controlButtonIcon}>
-            {isMuted ? "🎤" : "🔇"}
-          </Text>
+          <Ionicons
+            name={isMuted ? "mic-off" : "mic"}
+            size={28}
+            color={isMuted ? "#FF4458" : "#fff"}
+          />
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={[styles.controlButton, isVideoOff && styles.controlButtonActive]}
-          onPress={handleToggleVideo}
+        <TouchableOpacity
+          style={[styles.controlButton, isCameraOff && styles.controlButtonActive]}
+          onPress={() => setIsCameraOff(!isCameraOff)}
         >
-          <Text style={styles.controlButtonIcon}>
-            {isVideoOff ? "📹" : "📵"}
-          </Text>
+          <Ionicons
+            name={isCameraOff ? "videocam-off" : "videocam"}
+            size={28}
+            color={isCameraOff ? "#FF4458" : "#fff"}
+          />
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={styles.controlButton}
-          onPress={handleSwitchCamera}
-        >
-          <Text style={styles.controlButtonIcon}>🔄</Text>
+        <TouchableOpacity style={styles.endCallButton} onPress={endCall}>
+          <Ionicons name="call" size={32} color="#fff" />
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={[styles.controlButton, styles.endCallButton]}
-          onPress={handleEndCall}
-        >
-          <Text style={styles.controlButtonIcon}>📞</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Additional actions */}
-      <View style={styles.additionalActions}>
-        <TouchableOpacity style={styles.additionalButton}>
-          <Text style={styles.additionalButtonIcon}>💬</Text>
-          <Text style={styles.additionalButtonText}>Message</Text>
+        <TouchableOpacity style={styles.controlButton}>
+          <Ionicons name="swap-horizontal" size={28} color="#fff" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.additionalButton}>
-          <Text style={styles.additionalButtonIcon}>📷</Text>
-          <Text style={styles.additionalButtonText}>Screenshot</Text>
+        <TouchableOpacity style={styles.controlButton}>
+          <Ionicons name="volume-high" size={28} color="#fff" />
         </TouchableOpacity>
       </View>
     </View>
@@ -198,177 +123,101 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#000",
   },
-  connectingContainer: {
-    flex: 1,
-    backgroundColor: "#8b5cf6",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 40,
-  },
-  connectingAvatar: {
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    marginBottom: 30,
-    borderWidth: 4,
-    borderColor: "#fff",
-  },
-  connectingName: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "#fff",
-    marginBottom: 10,
-    textAlign: "center",
-  },
-  connectingStatus: {
-    fontSize: 18,
-    color: "rgba(255,255,255,0.8)",
-    marginBottom: 60,
-    textAlign: "center",
-  },
-  connectingButtons: {
-    position: "absolute",
-    bottom: 100,
-    alignItems: "center",
-  },
-  remoteVideoContainer: {
-    flex: 1,
-    position: "relative",
-  },
   remoteVideo: {
-    width: "100%",
-    height: "100%",
-    resizeMode: "cover",
-  },
-  videoOffContainer: {
-    flex: 1,
-    backgroundColor: "#1a1a1a",
+    width: width,
+    height: height,
     justifyContent: "center",
     alignItems: "center",
   },
-  videoOffAvatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    marginBottom: 20,
-  },
-  videoOffText: {
-    fontSize: 16,
-    color: "#fff",
-    textAlign: "center",
-  },
-  callInfoOverlay: {
+  remoteVideoBackground: {
     position: "absolute",
-    top: 50,
-    left: 20,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20,
+    width: width,
+    height: height,
   },
-  callDuration: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#fff",
-    textAlign: "center",
+  remoteVideoImage: {
+    width: width * 0.6,
+    height: width * 0.6,
+    borderRadius: (width * 0.6) / 2,
+    borderWidth: 4,
+    borderColor: "rgba(255, 255, 255, 0.3)",
   },
-  callStatus: {
-    fontSize: 12,
-    color: "#2ecc71",
-    textAlign: "center",
-  },
-  localVideoContainer: {
+  localVideo: {
     position: "absolute",
-    top: 100,
+    top: 60,
     right: 20,
-    width: 120,
-    height: 160,
-    borderRadius: 15,
+    width: 100,
+    height: 140,
+    borderRadius: 12,
+    backgroundColor: "#333",
     overflow: "hidden",
     borderWidth: 2,
     borderColor: "#fff",
   },
-  localVideo: {
-    width: "100%",
-    height: "100%",
-    resizeMode: "cover",
-  },
-  localVideoOff: {
+  cameraOffView: {
     flex: 1,
-    backgroundColor: "#333",
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#222",
   },
-  localVideoOffIcon: {
-    fontSize: 30,
-  },
-  userInfoOverlay: {
-    position: "absolute",
-    bottom: 180,
-    left: 0,
-    right: 0,
+  cameraOnView: {
+    flex: 1,
+    justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#444",
+  },
+  cameraOnText: {
+    color: "#fff",
+    fontSize: 12,
+  },
+  topInfo: {
+    position: "absolute",
+    top: 60,
+    left: 20,
+  },
+  userInfoCard: {
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
   },
   userName: {
-    fontSize: 24,
-    fontWeight: "700",
+    fontSize: 18,
+    fontWeight: "600",
     color: "#fff",
-    textShadowColor: "rgba(0,0,0,0.5)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
   },
-  controlsContainer: {
+  callDuration: {
+    fontSize: 13,
+    color: "#4CAF50",
+    marginTop: 2,
+  },
+  bottomControls: {
     position: "absolute",
-    bottom: 100,
+    bottom: 50,
     left: 0,
     right: 0,
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 40,
+    gap: 20,
   },
   controlButton: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: "rgba(255,255,255,0.2)",
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
     justifyContent: "center",
     alignItems: "center",
-    marginHorizontal: 10,
   },
   controlButtonActive: {
-    backgroundColor: "rgba(255,255,255,0.4)",
-  },
-  controlButtonIcon: {
-    fontSize: 24,
+    backgroundColor: "rgba(255, 68, 88, 0.3)",
   },
   endCallButton: {
-    backgroundColor: "#e74c3c",
-  },
-  endCallIcon: {
-    fontSize: 24,
-    transform: [{ rotate: "135deg" }],
-  },
-  additionalActions: {
-    position: "absolute",
-    bottom: 20,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: "#FF4458",
     justifyContent: "center",
     alignItems: "center",
-  },
-  additionalButton: {
-    alignItems: "center",
-    marginHorizontal: 30,
-  },
-  additionalButtonIcon: {
-    fontSize: 20,
-    marginBottom: 4,
-  },
-  additionalButtonText: {
-    fontSize: 12,
-    color: "#fff",
-    opacity: 0.8,
+    transform: [{ rotate: "135deg" }],
   },
 });

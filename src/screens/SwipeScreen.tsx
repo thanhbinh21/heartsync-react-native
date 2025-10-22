@@ -8,215 +8,190 @@ import {
   Image,
   PanResponder,
   Animated,
+  ActivityIndicator,
   Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../../App";
-import { UserService, LikeService, User } from "../services";
-import { AnimationUtils } from "../utils/animations";
+import { Ionicons } from "@expo/vector-icons";
+import { matchService } from "../services/match.service";
+import { DiscoverUser } from "../types/api";
+import { handleApiError } from "../utils/error-handler";
 
 type NavProp = StackNavigationProp<RootStackParamList, "Swipe">;
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function SwipeScreen() {
   const navigation = useNavigation<NavProp>();
-  const [users, setUsers] = useState<User[]>([]);
-  const [currentUserIndex, setCurrentUserIndex] = useState(0);
+  const [users, setUsers] = useState<DiscoverUser[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [likeCount, setLikeCount] = useState(0);
-  
   const pan = useRef(new Animated.ValueXY()).current;
   const rotate = useRef(new Animated.Value(0)).current;
-  const scale = useRef(new Animated.Value(1)).current;
-  const fadeAnim = useRef(new Animated.Value(1)).current;
 
-  // Load potential matches on component mount
   useEffect(() => {
-    loadPotentialMatches();
-    checkDailyLikeCount();
+    loadUsers();
   }, []);
 
-  const loadPotentialMatches = async () => {
+  const loadUsers = async () => {
     try {
       setLoading(true);
-      const potentialMatches = await UserService.getPotentialMatches("user_1", 10);
-      setUsers(potentialMatches);
+      console.log('🔄 Loading discover users...');
+      const discoverUsers = await matchService.getDiscoverUsers();
+      console.log('✅ Got users:', discoverUsers.length);
+      console.log('📋 Users data:', discoverUsers);
+      setUsers(discoverUsers);
+      
+      if (discoverUsers.length === 0) {
+        console.warn('⚠️ No users returned from backend');
+        Alert.alert(
+          "No Users Available", 
+          "There are currently no users to show. This could mean:\n\n" +
+          "1. You've already swiped on all available users\n" +
+          "2. No other users match your preferences\n" +
+          "3. Backend database needs more users\n\n" +
+          "Try adjusting your preferences or check back later!",
+          [
+            { text: "OK" },
+            { text: "Reload", onPress: () => loadUsers() }
+          ]
+        );
+      }
     } catch (error) {
-      console.error("Error loading matches:", error);
-      Alert.alert("Error", "Failed to load potential matches");
+      console.error('❌ Load users error:', error);
+      Alert.alert("Error", handleApiError(error));
     } finally {
       setLoading(false);
     }
   };
 
-  const checkDailyLikeCount = async () => {
-    try {
-      const count = await LikeService.getDailyLikeCount("user_1");
-      setLikeCount(count);
-    } catch (error) {
-      console.error("Error checking like count:", error);
-    }
-  };
-
-  const currentUser = users[currentUserIndex];
+  const currentUser = users[currentIndex];
 
   const panResponder = PanResponder.create({
     onMoveShouldSetPanResponder: () => true,
     onPanResponderMove: (_, gestureState) => {
       pan.setValue({ x: gestureState.dx, y: gestureState.dy });
-      rotate.setValue(gestureState.dx / screenWidth * 0.4);
+      rotate.setValue(gestureState.dx / SCREEN_WIDTH);
     },
     onPanResponderRelease: (_, gestureState) => {
-      const { dx, dy } = gestureState;
-      const isSwipeRight = dx > 120;
-      const isSwipeLeft = dx < -120;
-      const isSwipeUp = dy < -120;
-
-      if (isSwipeRight) {
-        handleSwipeRight();
-      } else if (isSwipeLeft) {
-        handleSwipeLeft();
-      } else if (isSwipeUp) {
+      if (gestureState.dx > 120) {
+        handleLike();
+      } else if (gestureState.dx < -120) {
+        handlePass();
+      } else if (gestureState.dy < -120) {
         handleSuperLike();
       } else {
-        // Return to center
-        Animated.parallel([
-          Animated.spring(pan, {
-            toValue: { x: 0, y: 0 },
-            useNativeDriver: false,
-          }),
-          Animated.spring(rotate, {
-            toValue: 0,
-            useNativeDriver: false,
-          }),
-        ]).start();
+        Animated.spring(pan, {
+          toValue: { x: 0, y: 0 },
+          useNativeDriver: false,
+        }).start();
       }
     },
   });
 
-  const handleSwipeRight = async () => {
-    // Check if user has reached daily like limit
-    if (likeCount >= 10) {
-      Alert.alert(
-        "Daily Like Limit Reached",
-        "You've reached your daily limit of 10 likes. Upgrade to Premium for unlimited likes!",
-        [
-          { text: "Cancel", style: "cancel" },
-          { text: "Upgrade", onPress: () => navigation.navigate("Subscription" as never) }
-        ]
-      );
-      return;
-    }
-
-    Animated.parallel([
-      Animated.timing(pan, {
-        toValue: { x: screenWidth, y: 0 },
-        duration: 200,
-        useNativeDriver: false,
-      }),
-      Animated.timing(rotate, {
-        toValue: 0.4,
-        duration: 200,
-        useNativeDriver: false,
-      }),
-    ]).start(async () => {
+  const handlePass = async () => {
+    if (!currentUser) return;
+    
+    Animated.timing(pan, {
+      toValue: { x: -SCREEN_WIDTH - 100, y: 0 },
+      duration: 300,
+      useNativeDriver: false,
+    }).start(async () => {
       try {
-        const result = await LikeService.sendLike("user_1", currentUser.id, "like");
-        setLikeCount(prev => prev + 1);
-        
+        await matchService.pass(currentUser.id);
+      } catch (error) {
+        console.error("Pass error:", error);
+      }
+      nextCard();
+    });
+  };
+
+  const handleLike = async () => {
+    if (!currentUser) return;
+    
+    Animated.timing(pan, {
+      toValue: { x: SCREEN_WIDTH + 100, y: 0 },
+      duration: 300,
+      useNativeDriver: false,
+    }).start(async () => {
+      try {
+        const result = await matchService.like(currentUser.id);
         if (result.isMatch) {
           navigation.navigate("SwipeConfirmation", { matchedUser: currentUser });
         }
       } catch (error) {
-        console.error("Error liking user:", error);
+        console.error("Like error:", error);
       }
-      nextUser();
-    });
-  };
-
-  const handleSwipeLeft = async () => {
-    Animated.parallel([
-      Animated.timing(pan, {
-        toValue: { x: -screenWidth, y: 0 },
-        duration: 200,
-        useNativeDriver: false,
-      }),
-      Animated.timing(rotate, {
-        toValue: -0.4,
-        duration: 200,
-        useNativeDriver: false,
-      }),
-    ]).start(async () => {
-      try {
-        await LikeService.sendLike("user_1", currentUser.id, "pass");
-      } catch (error) {
-        console.error("Error passing user:", error);
-      }
-      nextUser();
+      nextCard();
     });
   };
 
   const handleSuperLike = async () => {
-    Animated.parallel([
-      Animated.timing(pan, {
-        toValue: { x: 0, y: -screenHeight },
-        duration: 200,
-        useNativeDriver: false,
-      }),
-      Animated.timing(rotate, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: false,
-      }),
-    ]).start(async () => {
+    if (!currentUser) return;
+    
+    Animated.timing(pan, {
+      toValue: { x: 0, y: -SCREEN_HEIGHT - 100 },
+      duration: 300,
+      useNativeDriver: false,
+    }).start(async () => {
       try {
-        const result = await LikeService.sendLike("user_1", currentUser.id, "super_like");
+        const result = await matchService.superLike(currentUser.id);
         if (result.isMatch) {
           navigation.navigate("SwipeConfirmation", { matchedUser: currentUser });
         }
       } catch (error) {
-        console.error("Error super liking user:", error);
+        console.error("Super like error:", error);
       }
-      nextUser();
+      nextCard();
     });
   };
 
-  const nextUser = () => {
+  const nextCard = () => {
     pan.setValue({ x: 0, y: 0 });
     rotate.setValue(0);
-    if (currentUserIndex < users.length - 1) {
-      setCurrentUserIndex(currentUserIndex + 1);
-    } else {
-      // Load more users when we reach the end
-      loadPotentialMatches();
-      setCurrentUserIndex(0);
+    setCurrentIndex((prev) => prev + 1);
+    
+    // Load more users if running low
+    if (currentIndex >= users.length - 3) {
+      loadUsers();
     }
   };
 
   const rotateCard = rotate.interpolate({
     inputRange: [-1, 0, 1],
-    outputRange: ["-30deg", "0deg", "30deg"],
+    outputRange: ["-10deg", "0deg", "10deg"],
   });
 
   if (loading) {
     return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <Text style={[styles.noMoreCards, { fontSize: 18 }]}>Loading potential matches...</Text>
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color="#9D4EDD" />
       </View>
     );
   }
 
-  if (!currentUser) {
+  if (!currentUser || currentIndex >= users.length) {
     return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <Text style={styles.noMoreCards}>No more profiles!</Text>
-        <TouchableOpacity 
-          style={{ marginTop: 20, padding: 10, backgroundColor: '#ff4458', borderRadius: 20 }}
-          onPress={loadPotentialMatches}
-        >
-          <Text style={{ color: 'white', fontWeight: 'bold' }}>Load More</Text>
+      <View style={[styles.container, styles.centerContent]}>
+        <Ionicons name="heart-dislike" size={80} color="#ccc" />
+        <Text style={styles.noMoreText}>No more users to show</Text>
+        <Text style={styles.debugText}>Total users loaded: {users.length}</Text>
+        <Text style={styles.debugText}>Current position: {currentIndex + 1}</Text>
+        
+        {users.length === 0 && (
+          <View style={styles.helpContainer}>
+            <Text style={styles.helpText}>Possible reasons:</Text>
+            <Text style={styles.helpBullet}>• Already swiped all users</Text>
+            <Text style={styles.helpBullet}>• No users match preferences</Text>
+            <Text style={styles.helpBullet}>• Backend needs more users</Text>
+          </View>
+        )}
+        
+        <TouchableOpacity style={styles.reloadButton} onPress={loadUsers}>
+          <Ionicons name="reload" size={20} color="#fff" style={{ marginRight: 8 }} />
+          <Text style={styles.reloadText}>Reload</Text>
         </TouchableOpacity>
       </View>
     );
@@ -226,31 +201,21 @@ export default function SwipeScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.navigate("Filters")}>
-          <Text style={styles.headerIcon}>⚙️</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate("Home")}>
-          <Text style={styles.logo}>HeartSync</Text>
-        </TouchableOpacity>
         <TouchableOpacity onPress={() => navigation.navigate("Matches")}>
-          <Text style={styles.headerIcon}>💬</Text>
+          <Ionicons name="chatbubbles" size={28} color="#FF4458" />
+        </TouchableOpacity>
+        <View style={styles.logoPlaceholder}>
+          <Ionicons name="heart" size={24} color="#9D4EDD" />
+        </View>
+        <TouchableOpacity onPress={() => navigation.navigate("Filters")}>
+          <Ionicons name="options" size={28} color="#888" />
         </TouchableOpacity>
       </View>
 
-      {/* Card Stack */}
+      {/* Card */}
       <View style={styles.cardContainer}>
-        {/* Next card (background) */}
-        {users[currentUserIndex + 1] && (
-          <View style={[styles.card, styles.nextCard]}>
-            <Image 
-              source={{ uri: users[currentUserIndex + 1].photos[0] }} 
-              style={styles.cardImage} 
-            />
-          </View>
-        )}
-
-        {/* Current card */}
         <Animated.View
+          {...panResponder.panHandlers}
           style={[
             styles.card,
             {
@@ -261,107 +226,79 @@ export default function SwipeScreen() {
               ],
             },
           ]}
-          {...panResponder.panHandlers}
         >
-          <TouchableOpacity 
-            style={styles.cardTouchable}
-            onPress={() => navigation.navigate("ProfileView", { user: currentUser })}
+          <Image 
+            source={{ uri: currentUser.photos?.[0] || 'https://via.placeholder.com/400' }} 
+            style={styles.cardImage} 
+          />
+          
+          {/* Like/Nope Overlay */}
+          <Animated.View
+            style={[
+              styles.likeOverlay,
+              {
+                opacity: pan.x.interpolate({
+                  inputRange: [0, SCREEN_WIDTH / 4],
+                  outputRange: [0, 1],
+                  extrapolate: "clamp",
+                }),
+              },
+            ]}
           >
-            <Image source={{ uri: currentUser.photos[0] }} style={styles.cardImage} />
-            
-            {/* Swipe indicators */}
-            <Animated.View
-              style={[
-                styles.likeLabel,
-                {
-                  opacity: pan.x.interpolate({
-                    inputRange: [0, 120],
-                    outputRange: [0, 1],
-                    extrapolate: "clamp",
-                  }),
-                },
-              ]}
-            >
-              <Text style={styles.likeLabelText}>LIKE</Text>
-            </Animated.View>
+            <Text style={styles.likeText}>LIKE</Text>
+          </Animated.View>
 
-            <Animated.View
-              style={[
-                styles.nopeLabel,
-                {
-                  opacity: pan.x.interpolate({
-                    inputRange: [-120, 0],
-                    outputRange: [1, 0],
-                    extrapolate: "clamp",
-                  }),
-                },
-              ]}
-            >
-              <Text style={styles.nopeLabelText}>NOPE</Text>
-            </Animated.View>
+          <Animated.View
+            style={[
+              styles.nopeOverlay,
+              {
+                opacity: pan.x.interpolate({
+                  inputRange: [-SCREEN_WIDTH / 4, 0],
+                  outputRange: [1, 0],
+                  extrapolate: "clamp",
+                }),
+              },
+            ]}
+          >
+            <Text style={styles.nopeText}>NOPE</Text>
+          </Animated.View>
 
-            <Animated.View
-              style={[
-                styles.superLikeLabel,
-                {
-                  opacity: pan.y.interpolate({
-                    inputRange: [-120, 0],
-                    outputRange: [1, 0],
-                    extrapolate: "clamp",
-                  }),
-                },
-              ]}
-            >
-              <Text style={styles.superLikeLabelText}>SUPER LIKE</Text>
-            </Animated.View>
-
-            {/* User info */}
+          {/* User Info */}
+          <View style={styles.cardInfo}>
             <View style={styles.userInfo}>
-              <View style={styles.userDetails}>
-                <Text style={styles.userName}>{currentUser.name}, {currentUser.age}</Text>
-                <Text style={styles.userDistance}>{currentUser.distance} km away</Text>
-                <Text style={styles.userBio}>{currentUser.bio}</Text>
+              <Text style={styles.userName}>
+                {currentUser.name || 'Unknown'}, {currentUser.age || 0}
+              </Text>
+              <Text style={styles.userBio}>{currentUser.bio || 'No bio'}</Text>
+              <View style={styles.distanceRow}>
+                <Ionicons name="location" size={14} color="#fff" />
+                <Text style={styles.distance}>
+                  {currentUser.location || 'Location'} • {currentUser.job || 'Occupation'}
+                </Text>
               </View>
-              <TouchableOpacity style={styles.infoButton}>
-                <Text style={styles.infoButtonText}>ℹ️</Text>
-              </TouchableOpacity>
             </View>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.infoButton}
+              onPress={() => navigation.navigate("ProfileView", { user: currentUser })}
+            >
+              <Ionicons name="information-circle" size={28} color="#fff" />
+            </TouchableOpacity>
+          </View>
         </Animated.View>
       </View>
 
-      {/* Action buttons */}
-      <View style={styles.actionButtons}>
-        <TouchableOpacity style={[styles.actionButton, styles.rewindButton]}>
-          <Text style={styles.actionButtonText}>↶</Text>
+      {/* Action Buttons */}
+      <View style={styles.actionsContainer}>
+        <TouchableOpacity style={styles.actionButton} onPress={handlePass}>
+          <Ionicons name="close" size={32} color="#FF4458" />
         </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.actionButton, styles.nopeButton]}
-          onPress={handleSwipeLeft}
-        >
-          <Text style={styles.actionButtonText}>✕</Text>
+
+        <TouchableOpacity style={[styles.actionButton, styles.superLikeButton]} onPress={handleSuperLike}>
+          <Ionicons name="star" size={24} color="#00C6D7" />
         </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.actionButton, styles.superLikeButton]}
-          onPress={handleSuperLike}
-        >
-          <Text style={styles.actionButtonText}>⭐</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.actionButton, styles.likeButton]}
-          onPress={handleSwipeRight}
-        >
-          <Text style={styles.actionButtonText}>♡</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.actionButton, styles.boostButton]}
-          onPress={() => navigation.navigate("Subscription")}
-        >
-          <Text style={styles.actionButtonText}>⚡</Text>
+
+        <TouchableOpacity style={[styles.actionButton, styles.likeButton]} onPress={handleLike}>
+          <Ionicons name="heart" size={32} color="#4CAF50" />
         </TouchableOpacity>
       </View>
     </View>
@@ -371,7 +308,53 @@ export default function SwipeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#fff",
+  },
+  centerContent: {
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 20,
+  },
+  noMoreText: {
+    fontSize: 18,
+    color: "#888",
+    marginTop: 20,
+  },
+  reloadButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#9D4EDD",
+    paddingHorizontal: 30,
+    paddingVertical: 12,
+    borderRadius: 25,
+    marginTop: 20,
+  },
+  reloadText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  debugText: {
+    color: "#888",
+    fontSize: 14,
+    marginTop: 8,
+  },
+  helpContainer: {
+    marginTop: 20,
+    paddingHorizontal: 40,
+    alignItems: "flex-start",
+  },
+  helpText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#666",
+    marginBottom: 8,
+  },
+  helpBullet: {
+    fontSize: 13,
+    color: "#888",
+    marginLeft: 10,
+    marginTop: 4,
   },
   header: {
     flexDirection: "row",
@@ -379,195 +362,136 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     paddingTop: 50,
-    paddingBottom: 20,
+    paddingBottom: 15,
     backgroundColor: "#fff",
   },
-  headerIcon: {
-    fontSize: 24,
-  },
-  logo: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#8b5cf6",
+  logoPlaceholder: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#F3E5FF",
+    justifyContent: "center",
+    alignItems: "center",
   },
   cardContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 20,
   },
   card: {
-    width: screenWidth * 0.9,
-    height: screenHeight * 0.65,
-    borderRadius: 20,
-    backgroundColor: "#fff",
-    position: "absolute",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-  nextCard: {
-    transform: [{ scale: 0.95 }],
-    opacity: 0.8,
-  },
-  cardTouchable: {
-    flex: 1,
+    width: SCREEN_WIDTH - 40,
+    height: SCREEN_HEIGHT - 300,
     borderRadius: 20,
     overflow: "hidden",
+    backgroundColor: "#fff",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
   cardImage: {
-    flex: 1,
     width: "100%",
-    resizeMode: "cover",
+    height: "100%",
   },
-  likeLabel: {
+  likeOverlay: {
     position: "absolute",
     top: 50,
-    right: 20,
-    backgroundColor: "green",
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 5,
-    transform: [{ rotate: "30deg" }],
+    left: 30,
+    borderWidth: 4,
+    borderColor: "#4CAF50",
+    borderRadius: 8,
+    padding: 10,
+    transform: [{ rotate: "-20deg" }],
   },
-  likeLabelText: {
-    color: "white",
+  likeText: {
+    fontSize: 32,
     fontWeight: "bold",
-    fontSize: 16,
+    color: "#4CAF50",
   },
-  nopeLabel: {
+  nopeOverlay: {
     position: "absolute",
     top: 50,
-    left: 20,
-    backgroundColor: "red",
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 5,
-    transform: [{ rotate: "-30deg" }],
+    right: 30,
+    borderWidth: 4,
+    borderColor: "#FF4458",
+    borderRadius: 8,
+    padding: 10,
+    transform: [{ rotate: "20deg" }],
   },
-  nopeLabelText: {
-    color: "white",
+  nopeText: {
+    fontSize: 32,
     fontWeight: "bold",
-    fontSize: 16,
+    color: "#FF4458",
   },
-  superLikeLabel: {
-    position: "absolute",
-    top: 100,
-    alignSelf: "center",
-    backgroundColor: "#00C6D7",
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 5,
-  },
-  superLikeLabelText: {
-    color: "white",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  userInfo: {
+  cardInfo: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
+    padding: 20,
+    backgroundColor: "rgba(0,0,0,0.5)",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-end",
-    padding: 20,
-    backgroundColor: "rgba(0,0,0,0.4)",
   },
-  userDetails: {
+  userInfo: {
     flex: 1,
   },
   userName: {
-    fontSize: 24,
-    fontWeight: "700",
+    fontSize: 26,
+    fontWeight: "bold",
     color: "#fff",
-    marginBottom: 4,
-  },
-  userDistance: {
-    fontSize: 16,
-    color: "#fff",
-    opacity: 0.8,
     marginBottom: 4,
   },
   userBio: {
-    fontSize: 14,
+    fontSize: 15,
     color: "#fff",
-    opacity: 0.9,
+    marginBottom: 4,
+  },
+  distanceRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  distance: {
+    fontSize: 13,
+    color: "#fff",
   },
   infoButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: "rgba(255,255,255,0.2)",
     justifyContent: "center",
     alignItems: "center",
   },
-  infoButtonText: {
-    fontSize: 18,
-    color: "#fff",
-  },
-  actionButtons: {
+  actionsContainer: {
     flexDirection: "row",
-    justifyContent: "space-around",
+    justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 30,
-    backgroundColor: "#fff",
+    paddingVertical: 20,
+    gap: 20,
   },
   actionButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#fff",
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 3,
   },
-  rewindButton: {
-    backgroundColor: "#f1c40f",
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-  },
-  nopeButton: {
-    backgroundColor: "#e74c3c",
-    width: 55,
-    height: 55,
-    borderRadius: 27.5,
-  },
   superLikeButton: {
-    backgroundColor: "#00C6D7",
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 50,
+    height: 50,
   },
   likeButton: {
-    backgroundColor: "#2ecc71",
-    width: 55,
-    height: 55,
-    borderRadius: 27.5,
-  },
-  boostButton: {
-    backgroundColor: "#8b5cf6",
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-  },
-  actionButtonText: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#fff",
-  },
-  noMoreCards: {
-    fontSize: 18,
-    textAlign: "center",
-    marginTop: 100,
-    color: "#666",
+    width: 60,
+    height: 60,
   },
 });

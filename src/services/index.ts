@@ -1,9 +1,10 @@
 // Export all services
-export { UserService } from './userService';
-export { MatchService } from './matchService';
-export { MessageService } from './messageService';
-export { LikeService } from './likeService';
-export { apiClient, API_BASE_URL } from './apiClient';
+export { authService } from './auth.service';
+export { userService } from './user.service';
+export { matchService } from './match.service';
+export { messageService } from './message.service';
+export { notificationService } from './notification.service';
+export { apiClient } from './api-client';
 
 // Export types
-export * from './types';
+export * from '../types/api';

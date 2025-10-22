@@ -10,151 +10,29 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../../App";
+import { Ionicons } from "@expo/vector-icons";
 
 type NavProp = StackNavigationProp<RootStackParamList, "Filters">;
-
-interface FilterState {
-  ageRange: [number, number];
-  maxDistance: number;
-  showMen: boolean;
-  showWomen: boolean;
-  showNonBinary: boolean;
-  recentlyActive: boolean;
-  education: string[];
-  interests: string[];
-  height: [number, number];
-  lifestyle: {
-    drinking: string[];
-    smoking: string[];
-    workout: string[];
-    diet: string[];
-  };
-}
 
 export default function FiltersScreen() {
   const navigation = useNavigation<NavProp>();
   
-  const [filters, setFilters] = useState<FilterState>({
-    ageRange: [18, 35],
-    maxDistance: 50,
-    showMen: true,
-    showWomen: true,
-    showNonBinary: true,
-    recentlyActive: false,
-    education: [],
-    interests: [],
-    height: [150, 200],
-    lifestyle: {
-      drinking: [],
-      smoking: [],
-      workout: [],
-      diet: [],
-    },
-  });
+  const [ageRange, setAgeRange] = useState([18, 35]);
+  const [distance, setDistance] = useState(50);
+  const [showMen, setShowMen] = useState(true);
+  const [showWomen, setShowWomen] = useState(true);
+  const [recentlyActive, setRecentlyActive] = useState(false);
 
-  const educationOptions = [
-    "High School", "Bachelor's", "Master's", "PhD", "Trade School", "Other"
-  ];
-
-  const interestOptions = [
-    "Travel", "Music", "Sports", "Movies", "Books", "Art", "Cooking",
-    "Dancing", "Photography", "Hiking", "Gaming", "Fitness", "Fashion", "Tech"
-  ];
-
-  const lifestyleOptions = {
-    drinking: ["Never", "Rarely", "Socially", "Regularly"],
-    smoking: ["Never", "Sometimes", "Regularly"],
-    workout: ["Never", "Sometimes", "Often", "Daily"],
-    diet: ["No Preference", "Vegetarian", "Vegan", "Keto", "Paleo"],
+  const adjustAge = (type: "min" | "max", delta: number) => {
+    if (type === "min") {
+      setAgeRange([Math.max(18, Math.min(ageRange[0] + delta, ageRange[1] - 1)), ageRange[1]]);
+    } else {
+      setAgeRange([ageRange[0], Math.min(65, Math.max(ageRange[1] + delta, ageRange[0] + 1))]);
+    }
   };
 
-  const handleAgeRangeChange = (type: 'min' | 'max', increment: boolean) => {
-    const change = increment ? 1 : -1;
-    setFilters(prev => {
-      if (type === 'min') {
-        const newMin = Math.max(18, Math.min(prev.ageRange[1] - 1, prev.ageRange[0] + change));
-        return { ...prev, ageRange: [newMin, prev.ageRange[1]] };
-      } else {
-        const newMax = Math.min(65, Math.max(prev.ageRange[0] + 1, prev.ageRange[1] + change));
-        return { ...prev, ageRange: [prev.ageRange[0], newMax] };
-      }
-    });
-  };
-
-  const handleDistanceChange = (increment: boolean) => {
-    const change = increment ? 5 : -5;
-    setFilters(prev => ({
-      ...prev,
-      maxDistance: Math.max(5, Math.min(100, prev.maxDistance + change))
-    }));
-  };
-
-  const handleHeightChange = (type: 'min' | 'max', increment: boolean) => {
-    const change = increment ? 5 : -5;
-    setFilters(prev => {
-      if (type === 'min') {
-        const newMin = Math.max(140, Math.min(prev.height[1] - 5, prev.height[0] + change));
-        return { ...prev, height: [newMin, prev.height[1]] };
-      } else {
-        const newMax = Math.min(220, Math.max(prev.height[0] + 5, prev.height[1] + change));
-        return { ...prev, height: [prev.height[0], newMax] };
-      }
-    });
-  };
-
-  const toggleEducation = (education: string) => {
-    setFilters(prev => ({
-      ...prev,
-      education: prev.education.includes(education)
-        ? prev.education.filter(e => e !== education)
-        : [...prev.education, education]
-    }));
-  };
-
-  const toggleInterest = (interest: string) => {
-    setFilters(prev => ({
-      ...prev,
-      interests: prev.interests.includes(interest)
-        ? prev.interests.filter(i => i !== interest)
-        : [...prev.interests, interest]
-    }));
-  };
-
-  const toggleLifestyle = (category: keyof typeof lifestyleOptions, option: string) => {
-    setFilters(prev => ({
-      ...prev,
-      lifestyle: {
-        ...prev.lifestyle,
-        [category]: prev.lifestyle[category].includes(option)
-          ? prev.lifestyle[category].filter(o => o !== option)
-          : [...prev.lifestyle[category], option]
-      }
-    }));
-  };
-
-  const resetFilters = () => {
-    setFilters({
-      ageRange: [18, 35],
-      maxDistance: 50,
-      showMen: true,
-      showWomen: true,
-      showNonBinary: true,
-      recentlyActive: false,
-      education: [],
-      interests: [],
-      height: [150, 200],
-      lifestyle: {
-        drinking: [],
-        smoking: [],
-        workout: [],
-        diet: [],
-      },
-    });
-  };
-
-  const applyFilters = () => {
-    // Apply filters and navigate back
-    navigation.goBack();
+  const adjustDistance = (delta: number) => {
+    setDistance(Math.max(5, Math.min(100, distance + delta)));
   };
 
   return (
@@ -162,11 +40,17 @@ export default function FiltersScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.cancelButton}>Cancel</Text>
+          <Ionicons name="close" size={28} color="#000" />
         </TouchableOpacity>
-        <Text style={styles.title}>Filters</Text>
-        <TouchableOpacity onPress={resetFilters}>
-          <Text style={styles.resetButton}>Reset</Text>
+        <Text style={styles.headerTitle}>Filters</Text>
+        <TouchableOpacity onPress={() => {
+          setAgeRange([18, 35]);
+          setDistance(50);
+          setShowMen(true);
+          setShowWomen(true);
+          setRecentlyActive(false);
+        }}>
+          <Text style={styles.resetText}>Reset</Text>
         </TouchableOpacity>
       </View>
 
@@ -175,23 +59,37 @@ export default function FiltersScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Age Range</Text>
           <View style={styles.rangeContainer}>
-            <View style={styles.rangeInput}>
-              <TouchableOpacity onPress={() => handleAgeRangeChange('min', false)}>
-                <Text style={styles.rangeButton}>-</Text>
+            <View style={styles.rangeControl}>
+              <TouchableOpacity 
+                style={styles.rangeButton}
+                onPress={() => adjustAge("min", -1)}
+              >
+                <Ionicons name="remove" size={20} color="#9D4EDD" />
               </TouchableOpacity>
-              <Text style={styles.rangeValue}>{filters.ageRange[0]}</Text>
-              <TouchableOpacity onPress={() => handleAgeRangeChange('min', true)}>
-                <Text style={styles.rangeButton}>+</Text>
+              <Text style={styles.rangeValue}>{ageRange[0]}</Text>
+              <TouchableOpacity 
+                style={styles.rangeButton}
+                onPress={() => adjustAge("min", 1)}
+              >
+                <Ionicons name="add" size={20} color="#9D4EDD" />
               </TouchableOpacity>
             </View>
+            
             <Text style={styles.rangeSeparator}>to</Text>
-            <View style={styles.rangeInput}>
-              <TouchableOpacity onPress={() => handleAgeRangeChange('max', false)}>
-                <Text style={styles.rangeButton}>-</Text>
+            
+            <View style={styles.rangeControl}>
+              <TouchableOpacity 
+                style={styles.rangeButton}
+                onPress={() => adjustAge("max", -1)}
+              >
+                <Ionicons name="remove" size={20} color="#9D4EDD" />
               </TouchableOpacity>
-              <Text style={styles.rangeValue}>{filters.ageRange[1]}</Text>
-              <TouchableOpacity onPress={() => handleAgeRangeChange('max', true)}>
-                <Text style={styles.rangeButton}>+</Text>
+              <Text style={styles.rangeValue}>{ageRange[1]}</Text>
+              <TouchableOpacity 
+                style={styles.rangeButton}
+                onPress={() => adjustAge("max", 1)}
+              >
+                <Ionicons name="add" size={20} color="#9D4EDD" />
               </TouchableOpacity>
             </View>
           </View>
@@ -200,176 +98,96 @@ export default function FiltersScreen() {
         {/* Distance */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Maximum Distance</Text>
-          <View style={styles.distanceContainer}>
-            <TouchableOpacity onPress={() => handleDistanceChange(false)}>
-              <Text style={styles.rangeButton}>-</Text>
-            </TouchableOpacity>
-            <Text style={styles.distanceValue}>{filters.maxDistance} km</Text>
-            <TouchableOpacity onPress={() => handleDistanceChange(true)}>
-              <Text style={styles.rangeButton}>+</Text>
-            </TouchableOpacity>
+          <Text style={styles.distanceValue}>{distance} km</Text>
+          <View style={styles.rangeContainer}>
+            <View style={styles.rangeControl}>
+              <TouchableOpacity 
+                style={styles.rangeButton}
+                onPress={() => adjustDistance(-5)}
+              >
+                <Ionicons name="remove" size={20} color="#9D4EDD" />
+              </TouchableOpacity>
+              <View style={styles.distanceSlider}>
+                <View 
+                  style={[styles.distanceSliderFill, { width: `${distance}%` }]} 
+                />
+              </View>
+              <TouchableOpacity 
+                style={styles.rangeButton}
+                onPress={() => adjustDistance(5)}
+              >
+                <Ionicons name="add" size={20} color="#9D4EDD" />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
-        {/* Gender Preferences */}
+        {/* Show Me */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Show Me</Text>
-          <View style={styles.genderOptions}>
-            <View style={styles.switchRow}>
-              <Text style={styles.switchLabel}>Men</Text>
-              <Switch
-                value={filters.showMen}
-                onValueChange={(value) => setFilters(prev => ({ ...prev, showMen: value }))}
-                trackColor={{ false: "#e0e0e0", true: "#8b5cf6" }}
-                thumbColor="#fff"
-              />
-            </View>
-            <View style={styles.switchRow}>
-              <Text style={styles.switchLabel}>Women</Text>
-              <Switch
-                value={filters.showWomen}
-                onValueChange={(value) => setFilters(prev => ({ ...prev, showWomen: value }))}
-                trackColor={{ false: "#e0e0e0", true: "#8b5cf6" }}
-                thumbColor="#fff"
-              />
-            </View>
-            <View style={styles.switchRow}>
-              <Text style={styles.switchLabel}>Non-binary</Text>
-              <Switch
-                value={filters.showNonBinary}
-                onValueChange={(value) => setFilters(prev => ({ ...prev, showNonBinary: value }))}
-                trackColor={{ false: "#e0e0e0", true: "#8b5cf6" }}
-                thumbColor="#fff"
-              />
-            </View>
-          </View>
-        </View>
-
-        {/* Recently Active */}
-        <View style={styles.section}>
           <View style={styles.switchRow}>
-            <Text style={styles.sectionTitle}>Recently Active</Text>
+            <Text style={styles.switchLabel}>Men</Text>
             <Switch
-              value={filters.recentlyActive}
-              onValueChange={(value) => setFilters(prev => ({ ...prev, recentlyActive: value }))}
-              trackColor={{ false: "#e0e0e0", true: "#8b5cf6" }}
+              value={showMen}
+              onValueChange={setShowMen}
+              trackColor={{ false: "#d0d0d0", true: "#9D4EDD" }}
+              thumbColor="#fff"
+            />
+          </View>
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Women</Text>
+            <Switch
+              value={showWomen}
+              onValueChange={setShowWomen}
+              trackColor={{ false: "#d0d0d0", true: "#9D4EDD" }}
               thumbColor="#fff"
             />
           </View>
         </View>
 
-        {/* Height */}
+        {/* Advanced Filters */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Height (cm)</Text>
-          <View style={styles.rangeContainer}>
-            <View style={styles.rangeInput}>
-              <TouchableOpacity onPress={() => handleHeightChange('min', false)}>
-                <Text style={styles.rangeButton}>-</Text>
-              </TouchableOpacity>
-              <Text style={styles.rangeValue}>{filters.height[0]}</Text>
-              <TouchableOpacity onPress={() => handleHeightChange('min', true)}>
-                <Text style={styles.rangeButton}>+</Text>
-              </TouchableOpacity>
+          <Text style={styles.sectionTitle}>Advanced</Text>
+          <View style={styles.switchRow}>
+            <View>
+              <Text style={styles.switchLabel}>Recently Active</Text>
+              <Text style={styles.switchDesc}>Only show people active in the last 7 days</Text>
             </View>
-            <Text style={styles.rangeSeparator}>to</Text>
-            <View style={styles.rangeInput}>
-              <TouchableOpacity onPress={() => handleHeightChange('max', false)}>
-                <Text style={styles.rangeButton}>-</Text>
-              </TouchableOpacity>
-              <Text style={styles.rangeValue}>{filters.height[1]}</Text>
-              <TouchableOpacity onPress={() => handleHeightChange('max', true)}>
-                <Text style={styles.rangeButton}>+</Text>
-              </TouchableOpacity>
-            </View>
+            <Switch
+              value={recentlyActive}
+              onValueChange={setRecentlyActive}
+              trackColor={{ false: "#d0d0d0", true: "#9D4EDD" }}
+              thumbColor="#fff"
+            />
           </View>
         </View>
 
-        {/* Education */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Education</Text>
-          <View style={styles.optionsGrid}>
-            {educationOptions.map((education) => (
-              <TouchableOpacity
-                key={education}
-                style={[
-                  styles.optionTag,
-                  filters.education.includes(education) && styles.selectedTag
-                ]}
-                onPress={() => toggleEducation(education)}
-              >
-                <Text style={[
-                  styles.optionText,
-                  filters.education.includes(education) && styles.selectedText
-                ]}>
-                  {education}
-                </Text>
-              </TouchableOpacity>
-            ))}
+        {/* Premium Filters */}
+        <View style={styles.premiumSection}>
+          <View style={styles.premiumIcon}>
+            <Ionicons name="sparkles" size={24} color="#FFD700" />
           </View>
+          <Text style={styles.premiumTitle}>Unlock More Filters</Text>
+          <Text style={styles.premiumDesc}>
+            Filter by education, lifestyle, and more with Premium
+          </Text>
+          <TouchableOpacity 
+            style={styles.upgradeButton}
+            onPress={() => navigation.navigate("Subscription")}
+          >
+            <Text style={styles.upgradeButtonText}>Upgrade Now</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Interests */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Interests</Text>
-          <View style={styles.optionsGrid}>
-            {interestOptions.map((interest) => (
-              <TouchableOpacity
-                key={interest}
-                style={[
-                  styles.optionTag,
-                  filters.interests.includes(interest) && styles.selectedTag
-                ]}
-                onPress={() => toggleInterest(interest)}
-              >
-                <Text style={[
-                  styles.optionText,
-                  filters.interests.includes(interest) && styles.selectedText
-                ]}>
-                  {interest}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* Lifestyle */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Lifestyle</Text>
-          
-          {Object.entries(lifestyleOptions).map(([category, options]) => (
-            <View key={category} style={styles.lifestyleCategory}>
-              <Text style={styles.lifestyleCategoryTitle}>
-                {category.charAt(0).toUpperCase() + category.slice(1)}
-              </Text>
-              <View style={styles.optionsGrid}>
-                {options.map((option) => (
-                  <TouchableOpacity
-                    key={option}
-                    style={[
-                      styles.optionTag,
-                      filters.lifestyle[category as keyof typeof lifestyleOptions].includes(option) && styles.selectedTag
-                    ]}
-                    onPress={() => toggleLifestyle(category as keyof typeof lifestyleOptions, option)}
-                  >
-                    <Text style={[
-                      styles.optionText,
-                      filters.lifestyle[category as keyof typeof lifestyleOptions].includes(option) && styles.selectedText
-                    ]}>
-                      {option}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-          ))}
-        </View>
-
-        <View style={styles.bottomSpacer} />
+        <View style={{ height: 100 }} />
       </ScrollView>
 
       {/* Apply Button */}
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.applyButton} onPress={applyFilters}>
+        <TouchableOpacity
+          style={styles.applyButton}
+          onPress={() => navigation.goBack()}
+        >
           <Text style={styles.applyButtonText}>Apply Filters</Text>
         </TouchableOpacity>
       </View>
@@ -388,151 +206,146 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     paddingTop: 50,
-    paddingBottom: 20,
+    paddingBottom: 15,
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
   },
-  cancelButton: {
-    fontSize: 16,
-    color: "#666",
+  headerTitle: {
+    fontSize: 18,
     fontWeight: "600",
+    color: "#000",
   },
-  title: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#111",
-  },
-  resetButton: {
+  resetText: {
     fontSize: 16,
-    color: "#8b5cf6",
-    fontWeight: "600",
+    color: "#9D4EDD",
+    fontWeight: "500",
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
   },
   section: {
-    marginVertical: 20,
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: "600",
-    color: "#111",
+    fontWeight: "700",
+    color: "#000",
     marginBottom: 15,
   },
   rangeContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "space-between",
+    gap: 15,
   },
-  rangeInput: {
+  rangeControl: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f5f5f5",
-    borderRadius: 25,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
+    gap: 15,
+    flex: 1,
   },
   rangeButton: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#8b5cf6",
-    paddingHorizontal: 15,
-    paddingVertical: 5,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#F3E5FF",
+    justifyContent: "center",
+    alignItems: "center",
   },
   rangeValue: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "600",
-    color: "#111",
+    color: "#000",
     minWidth: 40,
     textAlign: "center",
   },
   rangeSeparator: {
     fontSize: 16,
     color: "#666",
-    marginHorizontal: 20,
-  },
-  distanceContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#f5f5f5",
-    borderRadius: 25,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    alignSelf: "center",
   },
   distanceValue: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#111",
-    minWidth: 80,
-    textAlign: "center",
+    fontSize: 16,
+    color: "#666",
+    marginBottom: 10,
   },
-  genderOptions: {
-    backgroundColor: "#f9f9f9",
-    borderRadius: 15,
-    padding: 15,
+  distanceSlider: {
+    flex: 1,
+    height: 6,
+    backgroundColor: "#e0e0e0",
+    borderRadius: 3,
+    overflow: "hidden",
+  },
+  distanceSliderFill: {
+    height: "100%",
+    backgroundColor: "#9D4EDD",
   },
   switchRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 10,
+    paddingVertical: 12,
   },
   switchLabel: {
     fontSize: 16,
-    color: "#111",
+    color: "#000",
     fontWeight: "500",
   },
-  optionsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
+  switchDesc: {
+    fontSize: 13,
+    color: "#666",
+    marginTop: 2,
   },
-  optionTag: {
-    backgroundColor: "#f5f5f5",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
+  premiumSection: {
+    margin: 20,
+    padding: 20,
+    borderRadius: 16,
+    backgroundColor: "#F9F5FF",
+    alignItems: "center",
   },
-  selectedTag: {
-    backgroundColor: "#8b5cf6",
-    borderColor: "#8b5cf6",
+  premiumIcon: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 15,
   },
-  optionText: {
+  premiumTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#000",
+    marginBottom: 8,
+  },
+  premiumDesc: {
     fontSize: 14,
     color: "#666",
-    fontWeight: "500",
+    textAlign: "center",
+    marginBottom: 15,
   },
-  selectedText: {
-    color: "#fff",
+  upgradeButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 24,
+    backgroundColor: "#9D4EDD",
   },
-  lifestyleCategory: {
-    marginBottom: 20,
-  },
-  lifestyleCategoryTitle: {
+  upgradeButtonText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#111",
-    marginBottom: 10,
-  },
-  bottomSpacer: {
-    height: 100,
+    color: "#fff",
   },
   footer: {
     paddingHorizontal: 20,
-    paddingVertical: 20,
-    backgroundColor: "#fff",
+    paddingVertical: 15,
     borderTopWidth: 1,
     borderTopColor: "#f0f0f0",
   },
   applyButton: {
-    backgroundColor: "#8b5cf6",
+    backgroundColor: "#9D4EDD",
     paddingVertical: 16,
-    borderRadius: 25,
+    borderRadius: 30,
     alignItems: "center",
   },
   applyButtonText: {

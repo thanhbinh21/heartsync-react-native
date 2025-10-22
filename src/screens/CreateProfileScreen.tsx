@@ -13,22 +13,32 @@ import { useNavigation } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../../App";
 import * as ImagePicker from "expo-image-picker";
+import { Ionicons } from "@expo/vector-icons";
 
 type NavProp = StackNavigationProp<RootStackParamList, "CreateProfile">;
 
 export default function CreateProfileScreen() {
   const navigation = useNavigation<NavProp>();
   const [photos, setPhotos] = useState<string[]>([]);
-  const [name, setName] = useState("");
-  const [age, setAge] = useState("");
-  const [bio, setBio] = useState("");
-  const [location, setLocation] = useState("");
-  const [interests, setInterests] = useState<string[]>([]);
+  const [aboutMe, setAboutMe] = useState("");
+  const [occupation, setOccupation] = useState("");
+  const [gender, setGender] = useState("Male");
+  const [education, setEducation] = useState("");
+  const [location, setLocation] = useState("NV 89104");
+  const [height, setHeight] = useState("");
+  const [smoking, setSmoking] = useState("");
+  const [drinking, setDrinking] = useState("");
+  const [pets, setPets] = useState("");
+  const [children, setChildren] = useState("");
+  const [zodiacSign, setZodiacSign] = useState("");
+  const [religion, setReligion] = useState("");
+  const [interests, setInterests] = useState<string[]>(["Sci-fi movies"]);
+  const [languages, setLanguages] = useState<string[]>(["English", "Finnish"]);
 
-  const availableInterests = [
-    "Travel", "Music", "Sports", "Movies", "Books", "Art", "Cooking",
-    "Dancing", "Photography", "Hiking", "Gaming", "Fitness"
-  ];
+  const interestsList = ["Coffee brewing", "Trekking", "Sci-fi movies", "Art", "Music", "Travel"];
+  const languagesList = ["English", "Finnish", "Spanish", "French", "German"];
+
+  const profileCompletion = 45; // Calculate based on filled fields
 
   const pickImage = async () => {
     if (photos.length >= 6) {
@@ -64,13 +74,23 @@ export default function CreateProfileScreen() {
     if (interests.includes(interest)) {
       setInterests(interests.filter(i => i !== interest));
     } else {
-      setInterests([...interests, interest]);
+      if (interests.length < 5) {
+        setInterests([...interests, interest]);
+      }
+    }
+  };
+
+  const toggleLanguage = (language: string) => {
+    if (languages.includes(language)) {
+      setLanguages(languages.filter(l => l !== language));
+    } else {
+      setLanguages([...languages, language]);
     }
   };
 
   const handleSaveProfile = () => {
-    if (!name || !age || photos.length === 0) {
-      Alert.alert("Missing information", "Please fill in all required fields and add at least one photo");
+    if (photos.length === 0) {
+      Alert.alert("Missing information", "Please add at least one photo");
       return;
     }
     
@@ -78,118 +98,180 @@ export default function CreateProfileScreen() {
     navigation.navigate("Swipe");
   };
 
+  const renderDetailRow = (icon: any, label: string, value: string, onPress: () => void) => (
+    <TouchableOpacity style={styles.detailRow} onPress={onPress}>
+      <View style={styles.detailLeft}>
+        <Ionicons name={icon} size={20} color="#666" />
+        <Text style={styles.detailLabel}>{label}</Text>
+      </View>
+      <View style={styles.detailRight}>
+        <Text style={value ? styles.detailValue : styles.detailAdd}>{value || "Add"}</Text>
+        <Ionicons name="chevron-forward" size={20} color="#ccc" />
+      </View>
+    </TouchableOpacity>
+  );
+
   return (
     <ScrollView style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backButton}>← Back</Text>
+          <Ionicons name="chevron-back" size={24} color="#000" />
         </TouchableOpacity>
-        <Text style={styles.title}>Create My Profile</Text>
-        <TouchableOpacity onPress={handleSaveProfile}>
-          <Text style={styles.saveButton}>Save</Text>
-        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Edit profile</Text>
+        <View style={{ width: 24 }} />
       </View>
 
-      {/* Photo Section */}
+      {/* Profile Completion */}
+      <View style={styles.progressSection}>
+        <Text style={styles.progressText}>Profile completion: <Text style={styles.progressPercent}>{profileCompletion}%</Text></Text>
+        <View style={styles.progressBarBg}>
+          <View style={[styles.progressBarFill, { width: `${profileCompletion}%` }]} />
+        </View>
+      </View>
+
+      {/* Photos Section */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Add Photos *</Text>
-        <Text style={styles.sectionSubtitle}>Add at least 1 photo to continue</Text>
+        <Text style={styles.sectionTitle}>Photos</Text>
+        <Text style={styles.sectionSubtitle}>The main photo is how you appear to others on the swipe view.</Text>
         
         <View style={styles.photoGrid}>
-          {Array.from({ length: 6 }).map((_, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.photoSlot}
-              onPress={photos[index] ? () => removePhoto(index) : pickImage}
-            >
-              {photos[index] ? (
-                <Image source={{ uri: photos[index] }} style={styles.photo} />
-              ) : (
-                <View style={styles.addPhotoButton}>
-                  <Text style={styles.addPhotoText}>+</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          ))}
+          {/* Main Photo */}
+          <TouchableOpacity
+            style={styles.mainPhoto}
+            onPress={photos[0] ? () => removePhoto(0) : pickImage}
+          >
+            {photos[0] ? (
+              <Image source={{ uri: photos[0] }} style={styles.photo} />
+            ) : (
+              <View style={styles.addPhotoButton}>
+                <Ionicons name="add" size={32} color="#ccc" />
+              </View>
+            )}
+          </TouchableOpacity>
+
+          {/* Additional Photos */}
+          <View style={styles.additionalPhotos}>
+            {Array.from({ length: 5 }).map((_, index) => (
+              <TouchableOpacity
+                key={index + 1}
+                style={styles.smallPhoto}
+                onPress={photos[index + 1] ? () => removePhoto(index + 1) : pickImage}
+              >
+                {photos[index + 1] ? (
+                  <Image source={{ uri: photos[index + 1] }} style={styles.photo} />
+                ) : (
+                  <View style={styles.addPhotoButtonSmall}>
+                    <Ionicons name="add" size={24} color="#ccc" />
+                  </View>
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
       </View>
 
-      {/* Basic Info Section */}
+      {/* About Me Section */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Basic Information</Text>
-        
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Name *</Text>
-          <TextInput
-            style={styles.input}
-            value={name}
-            onChangeText={setName}
-            placeholder="Enter your name"
-            placeholderTextColor="#999"
-          />
-        </View>
+        <Text style={styles.sectionTitle}>About me</Text>
+        <Text style={styles.sectionSubtitle}>Make it easy for others to get a sense of who you are.</Text>
+        <TextInput
+          style={styles.bioInput}
+          value={aboutMe}
+          onChangeText={setAboutMe}
+          placeholder="Share a few words about yourself, your interests, and what you're looking for in a connection..."
+          placeholderTextColor="#ccc"
+          multiline
+          numberOfLines={4}
+        />
+      </View>
 
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Age *</Text>
-          <TextInput
-            style={styles.input}
-            value={age}
-            onChangeText={setAge}
-            placeholder="Enter your age"
-            placeholderTextColor="#999"
-            keyboardType="numeric"
-          />
-        </View>
+      {/* My Details Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>My details</Text>
+        {renderDetailRow("briefcase-outline", "Occupation", occupation, () => Alert.alert("Add Occupation"))}
+        {renderDetailRow("person-outline", "Gender & Pronouns", gender, () => Alert.alert("Select Gender"))}
+        {renderDetailRow("school-outline", "Education", education, () => Alert.alert("Add Education"))}
+        {renderDetailRow("location-outline", "Location", location, () => Alert.alert("Set Location"))}
+      </View>
 
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Location</Text>
-          <TextInput
-            style={styles.input}
-            value={location}
-            onChangeText={setLocation}
-            placeholder="Enter your location"
-            placeholderTextColor="#999"
-          />
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Bio</Text>
-          <TextInput
-            style={[styles.input, styles.bioInput]}
-            value={bio}
-            onChangeText={setBio}
-            placeholder="Tell us about yourself..."
-            placeholderTextColor="#999"
-            multiline
-            numberOfLines={4}
-          />
-        </View>
+      {/* Most People Want to Know */}
+      <View style={styles.section}>
+        <Text style={styles.sectionSubtitle}>Most people also want to know:</Text>
+        {renderDetailRow("resize-outline", "Height", height, () => Alert.alert("Add Height"))}
+        {renderDetailRow("cloud-outline", "Smoking", smoking, () => Alert.alert("Add Smoking"))}
+        {renderDetailRow("wine-outline", "Drinking", drinking, () => Alert.alert("Add Drinking"))}
+        {renderDetailRow("paw-outline", "Pets", pets, () => Alert.alert("Add Pets"))}
+        {renderDetailRow("people-outline", "Children", children, () => Alert.alert("Add Children"))}
+        {renderDetailRow("star-outline", "Zodiac sign", zodiacSign, () => Alert.alert("Add Zodiac"))}
+        {renderDetailRow("flower-outline", "Religion", religion, () => Alert.alert("Add Religion"))}
       </View>
 
       {/* Interests Section */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Interests</Text>
-        <Text style={styles.sectionSubtitle}>Select your interests</Text>
+        <Text style={styles.sectionTitle}>I enjoy</Text>
+        <Text style={styles.sectionSubtitle}>Adding your interest is a great way to find like-minded connections.</Text>
         
-        <View style={styles.interestsGrid}>
-          {availableInterests.map((interest) => (
+        <View style={styles.interestsContainer}>
+          {interests.map((interest, index) => (
+            <View key={index} style={styles.selectedInterest}>
+              <Text style={styles.interestText}>{interest}</Text>
+              <TouchableOpacity onPress={() => toggleInterest(interest)}>
+                <Ionicons name="close" size={16} color="#666" />
+              </TouchableOpacity>
+            </View>
+          ))}
+        </View>
+
+        <TouchableOpacity style={styles.dropdownButton}>
+          <Text style={styles.dropdownText}>Sci-fi movies</Text>
+          <Ionicons name="chevron-down" size={20} color="#666" />
+        </TouchableOpacity>
+
+        <View style={styles.interestTags}>
+          {interestsList.filter(i => !interests.includes(i)).slice(0, 2).map((interest, index) => (
             <TouchableOpacity
-              key={interest}
-              style={[
-                styles.interestTag,
-                interests.includes(interest) && styles.selectedInterestTag
-              ]}
+              key={index}
+              style={styles.interestTag}
               onPress={() => toggleInterest(interest)}
             >
-              <Text style={[
-                styles.interestText,
-                interests.includes(interest) && styles.selectedInterestText
-              ]}>
-                {interest}
-              </Text>
+              <Text style={styles.interestTagText}>{interest}</Text>
+              <TouchableOpacity>
+                <Ionicons name="close" size={16} color="#666" />
+              </TouchableOpacity>
             </TouchableOpacity>
           ))}
         </View>
+      </View>
+
+      {/* Languages Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>I communicate in</Text>
+        
+        <TouchableOpacity style={styles.languageButton}>
+          <Ionicons name="radio-button-on" size={20} color="#000" />
+          <Text style={styles.languageText}>English</Text>
+          <Ionicons name="chevron-down" size={20} color="#666" style={{ marginLeft: "auto" }} />
+        </TouchableOpacity>
+
+        <View style={styles.languageTags}>
+          {languages.filter(l => l !== "English").map((lang, index) => (
+            <View key={index} style={styles.languageTag}>
+              <Text style={styles.languageTagText}>{lang}</Text>
+              <TouchableOpacity onPress={() => toggleLanguage(lang)}>
+                <Ionicons name="close" size={16} color="#666" />
+              </TouchableOpacity>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* Linked Accounts Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Linked accounts</Text>
+        {renderDetailRow("logo-instagram", "Instagram", "", () => Alert.alert("Link Instagram"))}
+        {renderDetailRow("logo-facebook", "Facebook", "", () => Alert.alert("Link Facebook"))}
+        {renderDetailRow("logo-twitter", "Twitter", "", () => Alert.alert("Link Twitter"))}
       </View>
 
       <View style={styles.bottomSpacer} />
@@ -208,49 +290,74 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     paddingTop: 50,
-    paddingBottom: 20,
+    paddingBottom: 15,
   },
-  backButton: {
-    fontSize: 16,
-    color: "#8b5cf6",
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#000",
+  },
+  progressSection: {
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  progressText: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 8,
+  },
+  progressPercent: {
+    color: "#00C6D7",
     fontWeight: "600",
   },
-  title: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#111",
+  progressBarBg: {
+    width: "100%",
+    height: 6,
+    backgroundColor: "#E0F7FA",
+    borderRadius: 3,
+    overflow: "hidden",
   },
-  saveButton: {
-    fontSize: 16,
-    color: "#8b5cf6",
-    fontWeight: "600",
+  progressBarFill: {
+    height: "100%",
+    backgroundColor: "#00C6D7",
+    borderRadius: 3,
   },
   section: {
     paddingHorizontal: 20,
-    marginBottom: 30,
+    marginBottom: 25,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: "600",
-    color: "#111",
+    fontWeight: "700",
+    color: "#000",
     marginBottom: 5,
   },
   sectionSubtitle: {
-    fontSize: 14,
-    color: "#666",
+    fontSize: 13,
+    color: "#888",
     marginBottom: 15,
+    lineHeight: 18,
   },
   photoGrid: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
+    gap: 10,
   },
-  photoSlot: {
-    width: "31%",
-    aspectRatio: 3/4,
-    marginBottom: 10,
+  mainPhoto: {
+    width: 180,
+    height: 280,
     borderRadius: 12,
     overflow: "hidden",
+    backgroundColor: "#FFF9C4",
+  },
+  additionalPhotos: {
+    flex: 1,
+    gap: 10,
+  },
+  smallPhoto: {
+    height: 84,
+    borderRadius: 12,
+    overflow: "hidden",
+    backgroundColor: "#f5f5f5",
   },
   photo: {
     width: "100%",
@@ -258,65 +365,150 @@ const styles = StyleSheet.create({
   },
   addPhotoButton: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 2,
     borderColor: "#e0e0e0",
     borderStyle: "dashed",
   },
-  addPhotoText: {
-    fontSize: 24,
-    color: "#999",
-    fontWeight: "300",
+  addPhotoButtonSmall: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#e0e0e0",
+    borderStyle: "dashed",
   },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#111",
-    marginBottom: 8,
-  },
-  input: {
+  bioInput: {
     borderWidth: 1,
     borderColor: "#e0e0e0",
     borderRadius: 12,
     paddingHorizontal: 15,
     paddingVertical: 12,
-    fontSize: 16,
-    color: "#111",
-    backgroundColor: "#f9f9f9",
-  },
-  bioInput: {
+    fontSize: 14,
+    color: "#666",
+    backgroundColor: "#fff",
     height: 100,
     textAlignVertical: "top",
   },
-  interestsGrid: {
+  detailRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  detailLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  detailLabel: {
+    fontSize: 15,
+    color: "#333",
+  },
+  detailRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  detailValue: {
+    fontSize: 15,
+    color: "#000",
+    fontWeight: "500",
+  },
+  detailAdd: {
+    fontSize: 15,
+    color: "#ccc",
+  },
+  interestsContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 10,
+    gap: 8,
+    marginBottom: 15,
   },
-  interestTag: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+  selectedInterest: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     backgroundColor: "#f5f5f5",
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-  },
-  selectedInterestTag: {
-    backgroundColor: "#8b5cf6",
-    borderColor: "#8b5cf6",
+    borderRadius: 16,
   },
   interestText: {
     fontSize: 14,
-    color: "#666",
-    fontWeight: "500",
+    color: "#333",
   },
-  selectedInterestText: {
-    color: "#fff",
+  dropdownButton: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    borderRadius: 8,
+    backgroundColor: "#fff",
+    marginBottom: 10,
+  },
+  dropdownText: {
+    fontSize: 15,
+    color: "#333",
+  },
+  interestTags: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  interestTag: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: "#f5f5f5",
+    borderRadius: 16,
+  },
+  interestTagText: {
+    fontSize: 14,
+    color: "#333",
+  },
+  languageButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    borderRadius: 8,
+    backgroundColor: "#fff",
+    marginBottom: 10,
+  },
+  languageText: {
+    fontSize: 15,
+    color: "#333",
+    flex: 1,
+  },
+  languageTags: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  languageTag: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: "#f5f5f5",
+    borderRadius: 16,
+  },
+  languageTagText: {
+    fontSize: 14,
+    color: "#333",
   },
   bottomSpacer: {
     height: 50,

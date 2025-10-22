@@ -37,7 +37,7 @@ export default function App() {
     <NavigationContainer>
       <StatusBar style="auto" />
       <Stack.Navigator
-        initialRouteName="Started"
+        initialRouteName="Login"
         screenOptions={{
           headerShown: false,
           ...TransitionPresets.FadeFromBottomAndroid, // hiệu ứng chuyển mượt
