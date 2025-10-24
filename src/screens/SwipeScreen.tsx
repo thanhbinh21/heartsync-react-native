@@ -10,6 +10,7 @@ import {
   Animated,
   ActivityIndicator,
   Alert,
+  Modal,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
@@ -28,6 +29,8 @@ export default function SwipeScreen() {
   const [users, setUsers] = useState<DiscoverUser[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [showMatchModal, setShowMatchModal] = useState(false);
+  const [matchData, setMatchData] = useState<{ matchId: string | null; user: DiscoverUser } | null>(null);
   const pan = useRef(new Animated.ValueXY()).current;
   const rotate = useRef(new Animated.Value(0)).current;
 
@@ -117,12 +120,21 @@ export default function SwipeScreen() {
       useNativeDriver: false,
     }).start(async () => {
       try {
+        console.log('👍 Liking user:', currentUser.name);
         const result = await matchService.like(currentUser.id);
+        console.log('💕 Like result:', result);
+        
         if (result.isMatch) {
-          navigation.navigate("SwipeConfirmation", { matchedUser: currentUser });
+          console.log('🎉 IT\'S A MATCH!');
+          setMatchData({
+            matchId: result.matchId,
+            user: currentUser
+          });
+          setShowMatchModal(true);
         }
       } catch (error) {
-        console.error("Like error:", error);
+        console.error("❌ Like error:", error);
+        Alert.alert("Error", handleApiError(error));
       }
       nextCard();
     });
@@ -137,12 +149,21 @@ export default function SwipeScreen() {
       useNativeDriver: false,
     }).start(async () => {
       try {
+        console.log('⭐ Super liking user:', currentUser.name);
         const result = await matchService.superLike(currentUser.id);
+        console.log('💖 Super like result:', result);
+        
         if (result.isMatch) {
-          navigation.navigate("SwipeConfirmation", { matchedUser: currentUser });
+          console.log('🎉 IT\'S A SUPER MATCH!');
+          setMatchData({
+            matchId: result.matchId,
+            user: currentUser
+          });
+          setShowMatchModal(true);
         }
       } catch (error) {
-        console.error("Super like error:", error);
+        console.error("❌ Super like error:", error);
+        Alert.alert("Error", handleApiError(error));
       }
       nextCard();
     });
@@ -268,7 +289,15 @@ export default function SwipeScreen() {
             <View style={styles.userInfo}>
               <Text style={styles.userName}>
                 {currentUser.name || 'Unknown'}, {currentUser.age || 0}
+                {currentUser.verified && (
+                  <Text> </Text>
+                )}
               </Text>
+              {currentUser.verified && (
+                <View style={styles.verifiedBadge}>
+                  <Ionicons name="checkmark-circle" size={18} color="#4ECDC4" />
+                </View>
+              )}
               <Text style={styles.userBio}>{currentUser.bio || 'No bio'}</Text>
               <View style={styles.distanceRow}>
                 <Ionicons name="location" size={14} color="#fff" />
@@ -276,6 +305,22 @@ export default function SwipeScreen() {
                   {currentUser.location || 'Location'} • {currentUser.job || 'Occupation'}
                 </Text>
               </View>
+              
+              {/* Interests */}
+              {currentUser.interests && currentUser.interests.length > 0 && (
+                <View style={styles.interestsContainer}>
+                  {currentUser.interests.slice(0, 3).map((interest, index) => (
+                    <View key={index} style={styles.interestTag}>
+                      <Text style={styles.interestText}>{interest}</Text>
+                    </View>
+                  ))}
+                  {currentUser.interests.length > 3 && (
+                    <View style={styles.interestTag}>
+                      <Text style={styles.interestText}>+{currentUser.interests.length - 3}</Text>
+                    </View>
+                  )}
+                </View>
+              )}
             </View>
             <TouchableOpacity
               style={styles.infoButton}
@@ -301,6 +346,66 @@ export default function SwipeScreen() {
           <Ionicons name="heart" size={32} color="#4CAF50" />
         </TouchableOpacity>
       </View>
+
+      {/* Match Modal */}
+      <Modal
+        visible={showMatchModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowMatchModal(false)}
+      >
+        <View style={styles.matchModalOverlay}>
+          <View style={styles.matchModalContainer}>
+            <View style={styles.matchModalContent}>
+              {/* Celebration Icons */}
+              <View style={styles.matchIconsContainer}>
+                <Ionicons name="heart" size={80} color="#FF6B6B" />
+                <Text style={styles.matchTitle}>It's a Match! 🎉</Text>
+              </View>
+
+              {/* User Info */}
+              {matchData && (
+                <>
+                  <View style={styles.matchUserContainer}>
+                    {matchData.user.photos && matchData.user.photos.length > 0 && (
+                      <Image
+                        source={{ uri: matchData.user.photos[0] }}
+                        style={styles.matchUserPhoto}
+                      />
+                    )}
+                    <Text style={styles.matchUserName}>{matchData.user.name}</Text>
+                    <Text style={styles.matchText}>
+                      You and {matchData.user.name} liked each other!
+                    </Text>
+                  </View>
+
+                  {/* Action Buttons */}
+                  <View style={styles.matchModalButtons}>
+                    <TouchableOpacity
+                      style={styles.sendMessageBtn}
+                      onPress={() => {
+                        setShowMatchModal(false);
+                        navigation.navigate('Chat', { 
+                          user: matchData.user 
+                        });
+                      }}
+                    >
+                      <Text style={styles.sendMessageText}>Send Message 💬</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.keepSwipingBtn}
+                      onPress={() => setShowMatchModal(false)}
+                    >
+                      <Text style={styles.keepSwipingText}>Keep Swiping</Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              )}
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -444,6 +549,11 @@ const styles = StyleSheet.create({
     color: "#fff",
     marginBottom: 4,
   },
+  verifiedBadge: {
+    position: 'absolute',
+    right: -24,
+    top: 2,
+  },
   userBio: {
     fontSize: 15,
     color: "#fff",
@@ -458,6 +568,28 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#fff",
   },
+  
+  // Interests styles
+  interestsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 8,
+    gap: 6,
+  },
+  interestTag: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  interestText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  
   infoButton: {
     width: 44,
     height: 44,
@@ -493,5 +625,84 @@ const styles = StyleSheet.create({
   likeButton: {
     width: 60,
     height: 60,
+  },
+  // Match Modal Styles
+  matchModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  matchModalContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 30,
+    margin: 20,
+    maxWidth: 350,
+    width: '90%',
+  },
+  matchModalContent: {
+    alignItems: 'center',
+  },
+  matchIconsContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  matchTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#FF6B6B',
+    marginTop: 10,
+    textAlign: 'center',
+  },
+  matchUserContainer: {
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  matchUserPhoto: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    marginBottom: 15,
+  },
+  matchUserName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 10,
+  },
+  matchText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  matchModalButtons: {
+    width: '100%',
+    gap: 15,
+  },
+  sendMessageBtn: {
+    backgroundColor: '#FF6B6B',
+    paddingVertical: 15,
+    borderRadius: 25,
+    alignItems: 'center',
+  },
+  sendMessageText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  keepSwipingBtn: {
+    backgroundColor: 'transparent',
+    paddingVertical: 15,
+    borderRadius: 25,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#ddd',
+  },
+  keepSwipingText: {
+    color: '#666',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

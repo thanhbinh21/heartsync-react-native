@@ -1,12 +1,18 @@
 import { apiClient } from './api-client';
-import { User, Match, SwipeRequest, SwipeResponse, LikeType } from '../types/api';
+import { User, Match, SwipeRequest, SwipeResponse, LikeType, DiscoverUser } from '../types/api';
 
 export const matchService = {
   /**
    * Get users to swipe on
+   * Returns simplified DiscoverUser objects, not full User objects
    */
-  async getDiscoverUsers(): Promise<User[]> {
-    const response = await apiClient.get<User[]>('/matches/discover');
+  async getDiscoverUsers(): Promise<DiscoverUser[]> {
+    const response = await apiClient.get<DiscoverUser[]>('/matches/discover');
+    console.log('🎯 Match service - Response:', response);
+    console.log('🎯 Match service - Data:', response.data);
+    
+    // Backend returns { success: true, data: [...] }
+    // apiClient returns this as-is, so response.data is the users array
     return response.data || [];
   },
 
@@ -51,7 +57,7 @@ export const matchService = {
    * Get all matches
    */
   async getMatches(): Promise<Match[]> {
-    const response = await apiClient.get<Match[]>('/matches/matches');
+    const response = await apiClient.get<Match[]>('/matches');
     return response.data || [];
   },
 

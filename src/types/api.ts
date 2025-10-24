@@ -10,39 +10,56 @@ export interface ApiResponse<T = any> {
 export interface User {
   id: string;
   username: string;
+  email?: string;
   profile: {
     name: string;
     age: number;
+    gender: string;
     photos: string[];
     aboutMe?: string;
     occupation?: string;
     education?: string;
-    interests?: string[];
+    interests: string[];
     height?: string;
+    smoking?: string;
+    drinking?: string;
+    pets?: string;
+    children?: string;
     zodiac?: string;
-    location?: {
+    religion?: string;
+    languages?: string[];
+    location: {
       city?: string;
       state?: string;
-    };
-    lifestyle?: {
-      smoking?: string;
-      drinking?: string;
-      workout?: string;
-      diet?: string;
+      zipCode?: string;
     };
   };
-  preferences?: {
-    gender?: string[];
-    ageRange?: {
+  preferences: {
+    gender: string[];
+    ageRange: {
       min: number;
       max: number;
     };
-    distance?: number;
+    distance: number;
+    languages?: string[];
   };
   subscription: "free" | "premium";
   verified: boolean;
   isOnline?: boolean;
   lastActive?: string;
+}
+
+// Discover User type (simplified user data for swipe screen)
+export interface DiscoverUser {
+  id: string;
+  name: string;
+  age: number;
+  photos: string[];
+  bio: string;
+  location: string;
+  job: string;
+  interests: string[];
+  verified: boolean;
 }
 
 export interface Match {
@@ -118,6 +135,8 @@ export interface RegisterRequest {
 }
 
 export interface LoginResponse {
+  success: boolean;
+  message: string;
   token: string;
   user: User;
 }

@@ -69,12 +69,26 @@ export class ApiClient {
     }
 
     try {
-      const response = await fetch(`${this.baseURL}${endpoint}`, {
+      const url = `${this.baseURL}${endpoint}`;
+      console.log('🌐 API Request:', {
+        method: options.method || 'GET',
+        url,
+        body: options.body,
+        headers
+      });
+
+      const response = await fetch(url, {
         ...options,
         headers,
       });
 
       const data = await response.json();
+
+      console.log('📥 API Response:', {
+        status: response.status,
+        ok: response.ok,
+        data
+      });
 
       // Handle HTTP errors
       if (!response.ok) {

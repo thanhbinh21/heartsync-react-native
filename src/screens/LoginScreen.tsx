@@ -4,6 +4,7 @@ import { useNavigation } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../../App";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "../hooks/useAuth";
 import { handleApiError } from "../utils/error-handler";
 
@@ -23,15 +24,72 @@ export default function LoginScreen() {
       return;
     }
 
+    // Debug: Log what we're sending
+    console.log('🔐 Login attempt:', {
+      username: username.trim(),
+      password: password.trim(),
+      usernameLength: username.trim().length,
+      passwordLength: password.trim().length
+    });
+
     try {
       setLoading(true);
-      await login(username, password);
-      // Navigate to Home/Swipe screen after successful login
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "Swipe" }],
+      console.log('🚀 Starting login process...');
+      
+      const loginResponse = await login(username, password);
+      console.log('✅ Login successful, response:', loginResponse);
+      
+      // Save user info to AsyncStorage
+      await AsyncStorage.setItem('user', JSON.stringify(loginResponse.user));
+      console.log('💾 User info saved to AsyncStorage');
+      
+      // Check if profile is complete
+      const userProfile = loginResponse.user.profile || {};
+      const hasPhotos = userProfile.photos && 
+                        Array.isArray(userProfile.photos) && 
+                        userProfile.photos.length > 0;
+      
+      console.log('📸 Profile check:', { 
+        hasProfile: !!loginResponse.user.profile,
+        hasPhotos, 
+        photosArray: userProfile.photos,
+        photosLength: userProfile.photos?.length || 0
       });
+      
+      // For testing - always go to Swipe screen
+      console.log('🔄 Force navigating to Swipe for testing...');
+      setTimeout(() => {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Swipe" }],
+        });
+      }, 200);
+      
+      /*
+      if (!hasPhotos) {
+        // Redirect to profile creation if no photos
+        console.log('🔄 Navigating to CreateProfile...');
+        setTimeout(() => {
+          navigation.reset({
+            index: 0,
+            routes: [{ name: "CreateProfile" }],
+          });
+        }, 100);
+      } else {
+        // Navigate to Swipe screen after successful login
+        console.log('🔄 Navigating to Swipe...');
+        setTimeout(() => {
+          navigation.reset({
+            index: 0,
+            routes: [{ name: "Swipe" }],
+          });
+        }, 100);
+      }
+      */
+      
+      console.log('✨ Navigation completed!');
     } catch (error) {
+      console.error('❌ Login error:', error);
       Alert.alert("Login Failed", handleApiError(error));
     } finally {
       setLoading(false);
@@ -96,6 +154,49 @@ export default function LoginScreen() {
               <Text style={styles.btnText}>Login</Text>
             )}
           </TouchableOpacity>
+          
+          {/* Test Login Buttons - Now Working! */}
+          <View style={styles.testButtonsContainer}>
+            <TouchableOpacity
+              style={[styles.testBtn, { backgroundColor: "#4CAF50" }]}
+              onPress={async () => {
+                setUsername("admin");
+                setPassword("admin");
+                console.log("🧪 Testing admin login");
+                setTimeout(() => handleLogin(), 500);
+              }}
+              disabled={loading}
+            >
+              <Text style={styles.testBtnText}>🔑 Login as Admin (Premium)</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.testBtn, { backgroundColor: "#2196F3" }]}
+              onPress={async () => {
+                setUsername("ava");
+                setPassword("password");
+                console.log("🧪 Testing ava login");
+                setTimeout(() => handleLogin(), 500);
+              }}
+              disabled={loading}
+            >
+              <Text style={styles.testBtnText}>🔑 Login as Ava (Free)</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.testBtn, { backgroundColor: "#FF9800" }]}
+              onPress={async () => {
+                setUsername("joshua");
+                setPassword("password");
+                console.log("🧪 Testing joshua login");
+                setTimeout(() => handleLogin(), 500);
+              }}
+              disabled={loading}
+            >
+              <Text style={styles.testBtnText}>🔑 Login as Joshua (Premium)</Text>
+            </TouchableOpacity>
+          </View>
+          
           <TouchableOpacity onPress={() => setShowLoginForm(false)}>
             <Text style={styles.backText}>← Back to social login</Text>
           </TouchableOpacity>
@@ -239,6 +340,22 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
+  },
+  testBtn: {
+    backgroundColor: "#FF6B6B",
+    paddingVertical: 12,
+    borderRadius: 25,
+    alignItems: "center",
+    marginTop: 5,
+  },
+  testBtnText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  testButtonsContainer: {
+    marginTop: 10,
+    gap: 5,
   },
   termsContainer: {
     alignItems: "center",
