@@ -7,12 +7,8 @@ import {
   FlatList,
   Image,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import type { StackNavigationProp } from "@react-navigation/stack";
-import { RootStackParamList } from "../../App";
+import { useNavigate } from "react-router-native";
 import { Ionicons } from "@expo/vector-icons";
-
-type NavProp = StackNavigationProp<RootStackParamList, "Matches">;
 
 const mockMatches = [
   {
@@ -44,7 +40,7 @@ const mockMatches = [
 ];
 
 export default function MatchesScreen() {
-  const navigation = useNavigation<NavProp>();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"matches" | "messages">("matches");
   
   const newMatches = mockMatches.filter((m) => !m.lastMessage);
@@ -53,7 +49,7 @@ export default function MatchesScreen() {
   const renderNewMatch = ({ item }: any) => (
     <TouchableOpacity 
       style={styles.matchCard}
-      onPress={() => navigation.navigate("ProfileView", { user: item })}
+      onPress={() => navigate("/profile-view", { state: { user: item } })}
     >
       <Image source={{ uri: item.photo }} style={styles.matchPhoto} />
       {item.isOnline && <View style={styles.onlineDot} />}
@@ -65,7 +61,7 @@ export default function MatchesScreen() {
   const renderMessage = ({ item }: any) => (
     <TouchableOpacity 
       style={styles.messageRow}
-      onPress={() => navigation.navigate("Chat", { user: item })}
+      onPress={() => navigate("/chat", { state: { matchId: item.id, user: item } })}
     >
       <View style={styles.messageAvatarContainer}>
         <Image source={{ uri: item.photo }} style={styles.messageAvatar} />
@@ -95,7 +91,7 @@ export default function MatchesScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity onPress={() => navigate(-1)}>
           <Ionicons name="chevron-back" size={28} color="#000" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Matches</Text>
@@ -128,6 +124,7 @@ export default function MatchesScreen() {
       {activeTab === "matches" ? (
         newMatches.length > 0 ? (
           <FlatList
+            key="matches-grid"
             data={newMatches}
             renderItem={renderNewMatch}
             keyExtractor={(item) => item.id}
@@ -145,6 +142,7 @@ export default function MatchesScreen() {
         )
       ) : (
         <FlatList
+          key="messages-list"
           data={messages}
           renderItem={renderMessage}
           keyExtractor={(item) => item.id}

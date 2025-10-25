@@ -10,14 +10,10 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { useNavigation, useRoute } from "@react-navigation/native";
-import type { StackNavigationProp } from "@react-navigation/stack";
-import type { RouteProp } from "@react-navigation/native";
-import { RootStackParamList } from "../../App";
+import { useNavigate, useLocation } from "react-router-native";
 import { Ionicons } from "@expo/vector-icons";
-
-type NavProp = StackNavigationProp<RootStackParamList, "Chat">;
-type RoutePropType = RouteProp<RootStackParamList, "Chat">;
+import { useAuthContext } from "../context/AuthContext";
+import { messageService } from "../services/message.service";
 
 const mockMessages = [
   {
@@ -47,9 +43,10 @@ const mockMessages = [
 ];
 
 export default function ChatScreen() {
-  const navigation = useNavigation<NavProp>();
-  const route = useRoute<RoutePropType>();
-  const { user } = route.params;
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user: currentUser } = useAuthContext();
+  const { user: matchedUser, matchId } = location.state || {};
   
   const [messages, setMessages] = useState(mockMessages);
   const [inputText, setInputText] = useState("");
@@ -118,22 +115,22 @@ export default function ChatScreen() {
     >
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity onPress={() => navigate(-1)}>
           <Ionicons name="chevron-back" size={28} color="#000" />
         </TouchableOpacity>
         
         <TouchableOpacity
           style={styles.userInfo}
-          onPress={() => navigation.navigate("ProfileView", { user })}
+          onPress={() => navigate("/profile-view", { state: { user: matchedUser } })}
         >
-          <Image source={{ uri: user.photo }} style={styles.userAvatar} />
+          <Image source={{ uri: matchedUser?.photo }} style={styles.userAvatar} />
           <View>
-            <Text style={styles.userName}>{user.name}</Text>
+            <Text style={styles.userName}>{matchedUser?.name}</Text>
             <Text style={styles.userStatus}>Active now</Text>
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => navigation.navigate("VideoCall", { user })}>
+        <TouchableOpacity onPress={() => navigate("/video-call", { state: { user: matchedUser } })}>
           <Ionicons name="videocam" size={28} color="#9D4EDD" />
         </TouchableOpacity>
       </View>

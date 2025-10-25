@@ -1,18 +1,13 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import type { StackNavigationProp } from "@react-navigation/stack";
-import { RootStackParamList } from "../../App";
+import { useNavigate } from "react-router-native";
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useAuth } from "../hooks/useAuth";
+import { useAuthContext } from "../context/AuthContext";
 import { handleApiError } from "../utils/error-handler";
 
-type NavProp = StackNavigationProp<RootStackParamList, "Login">;
-
 export default function LoginScreen() {
-  const navigation = useNavigation<NavProp>();
-  const { login } = useAuth();
+  const navigate = useNavigate();
+  const { login } = useAuthContext();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -36,57 +31,12 @@ export default function LoginScreen() {
       setLoading(true);
       console.log('🚀 Starting login process...');
       
-      const loginResponse = await login(username, password);
-      console.log('✅ Login successful, response:', loginResponse);
+      await login(username, password);
+      console.log('✅ Login successful');
       
-      // Save user info to AsyncStorage
-      await AsyncStorage.setItem('user', JSON.stringify(loginResponse.user));
-      console.log('💾 User info saved to AsyncStorage');
-      
-      // Check if profile is complete
-      const userProfile = loginResponse.user.profile || {};
-      const hasPhotos = userProfile.photos && 
-                        Array.isArray(userProfile.photos) && 
-                        userProfile.photos.length > 0;
-      
-      console.log('📸 Profile check:', { 
-        hasProfile: !!loginResponse.user.profile,
-        hasPhotos, 
-        photosArray: userProfile.photos,
-        photosLength: userProfile.photos?.length || 0
-      });
-      
-      // For testing - always go to Swipe screen
-      console.log('🔄 Force navigating to Swipe for testing...');
-      setTimeout(() => {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: "Swipe" }],
-        });
-      }, 200);
-      
-      /*
-      if (!hasPhotos) {
-        // Redirect to profile creation if no photos
-        console.log('🔄 Navigating to CreateProfile...');
-        setTimeout(() => {
-          navigation.reset({
-            index: 0,
-            routes: [{ name: "CreateProfile" }],
-          });
-        }, 100);
-      } else {
-        // Navigate to Swipe screen after successful login
-        console.log('🔄 Navigating to Swipe...');
-        setTimeout(() => {
-          navigation.reset({
-            index: 0,
-            routes: [{ name: "Swipe" }],
-          });
-        }, 100);
-      }
-      */
-      
+      // Navigate to Swipe screen after successful login
+      console.log('🔄 Navigating to Swipe for testing...');
+      navigate('/swipe', { replace: true });
       console.log('✨ Navigation completed!');
     } catch (error) {
       console.error('❌ Login error:', error);

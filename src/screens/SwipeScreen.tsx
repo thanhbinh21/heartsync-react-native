@@ -12,20 +12,16 @@ import {
   Alert,
   Modal,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import type { StackNavigationProp } from "@react-navigation/stack";
-import { RootStackParamList } from "../../App";
+import { useNavigate } from "react-router-native";
 import { Ionicons } from "@expo/vector-icons";
 import { matchService } from "../services/match.service";
 import { DiscoverUser } from "../types/api";
 import { handleApiError } from "../utils/error-handler";
 
-type NavProp = StackNavigationProp<RootStackParamList, "Swipe">;
-
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function SwipeScreen() {
-  const navigation = useNavigation<NavProp>();
+  const navigate = useNavigate();
   const [users, setUsers] = useState<DiscoverUser[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -222,13 +218,13 @@ export default function SwipeScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.navigate("Matches")}>
+        <TouchableOpacity onPress={() => navigate("/matches")}>
           <Ionicons name="chatbubbles" size={28} color="#FF4458" />
         </TouchableOpacity>
         <View style={styles.logoPlaceholder}>
           <Ionicons name="heart" size={24} color="#9D4EDD" />
         </View>
-        <TouchableOpacity onPress={() => navigation.navigate("Filters")}>
+        <TouchableOpacity onPress={() => navigate("/filters")}>
           <Ionicons name="options" size={28} color="#888" />
         </TouchableOpacity>
       </View>
@@ -324,7 +320,7 @@ export default function SwipeScreen() {
             </View>
             <TouchableOpacity
               style={styles.infoButton}
-              onPress={() => navigation.navigate("ProfileView", { user: currentUser })}
+              onPress={() => navigate("/profile-view", { state: { user: currentUser } })}
             >
               <Ionicons name="information-circle" size={28} color="#fff" />
             </TouchableOpacity>
@@ -385,8 +381,11 @@ export default function SwipeScreen() {
                       style={styles.sendMessageBtn}
                       onPress={() => {
                         setShowMatchModal(false);
-                        navigation.navigate('Chat', { 
-                          user: matchData.user 
+                        navigate('/chat', { 
+                          state: {
+                            matchId: matchData.matchId,
+                            user: matchData.user 
+                          }
                         });
                       }}
                     >
