@@ -73,7 +73,7 @@ export class ApiClient {
       console.log('🌐 API Request:', {
         method: options.method || 'GET',
         url,
-        body: options.body,
+        body: options.body ? JSON.parse(options.body as string) : undefined,
         headers
       });
 
@@ -81,6 +81,16 @@ export class ApiClient {
         ...options,
         headers,
       });
+
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type');
+      console.log('📥 Response Content-Type:', contentType);
+      
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('❌ Non-JSON response:', text);
+        throw new Error('Server returned non-JSON response: ' + text.substring(0, 100));
+      }
 
       const data = await response.json();
 

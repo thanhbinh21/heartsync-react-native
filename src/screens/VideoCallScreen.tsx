@@ -7,21 +7,16 @@ import {
   Image,
   Dimensions,
 } from "react-native";
-import { useNavigation, useRoute } from "@react-navigation/native";
-import type { StackNavigationProp } from "@react-navigation/stack";
-import type { RouteProp } from "@react-navigation/native";
-import { RootStackParamList } from "../../App";
+import { useNavigate, useParams, useLocation } from "react-router-native";
 import { Ionicons } from "@expo/vector-icons";
-
-type NavProp = StackNavigationProp<RootStackParamList, "VideoCall">;
-type RoutePropType = RouteProp<RootStackParamList, "VideoCall">;
 
 const { width, height } = Dimensions.get("window");
 
 export default function VideoCallScreen() {
-  const navigation = useNavigation<NavProp>();
-  const route = useRoute<RoutePropType>();
-  const { user } = route.params;
+  const navigate = useNavigate();
+  const { matchId } = useParams<{ matchId: string }>();
+  const location = useLocation();
+  const user = location.state?.user;
   
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOff, setIsCameraOff] = useState(false);
@@ -42,7 +37,7 @@ export default function VideoCallScreen() {
   };
 
   const endCall = () => {
-    navigation.goBack();
+    navigate(-1);
   };
 
   return (

@@ -1,62 +1,270 @@
 import React from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import type { StackNavigationProp } from "@react-navigation/stack";
-import { RootStackParamList } from "../../App";
-
-type NavProp = StackNavigationProp<RootStackParamList, "Started">;
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
+  StatusBar,
+} from "react-native";
+import { useNavigate } from "react-router-native";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from "../constants/theme";
 
 export default function StartedScreen() {
-  const navigation = useNavigation<NavProp>();
+  const navigate = useNavigate();
+
+  const handleAppleLogin = () => {
+    // TODO: Implement Apple Sign-In
+    console.log("Apple login pressed");
+    navigate("/login");
+  };
+
+  const handleFacebookLogin = () => {
+    // TODO: Implement Facebook login
+    console.log("Facebook login pressed");
+    navigate("/login");
+  };
+
+  const handlePhoneLogin = () => {
+    navigate("/login");
+  };
 
   return (
-    <View style={styles.container}>
-      <Image
-        source={{ uri: "https://cdn-icons-png.flaticon.com/512/833/833472.png" }}
-        style={styles.logo}
-      />
-      <Text style={styles.title}>HeartSync</Text>
-      <Text style={styles.subtitle}>
-        Where Hearts Connect, Love Finds Its Sync.
-      </Text>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
 
-      <TouchableOpacity style={styles.appleBtn}>
-        <Text style={styles.appleText}> Continue with Apple</Text>
-      </TouchableOpacity>
+      {/* Main Content */}
+      <View style={styles.content}>
+        {/* Logo Section */}
+        <View style={styles.logoSection}>
+          {/* Logo with Gradient Circle */}
+          <View style={styles.logoContainer}>
+            <LinearGradient
+              colors={[COLORS.primaryLight, COLORS.primary, COLORS.primaryDark]}
+              style={styles.logoGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <Ionicons name="heart" size={70} color="#fff" />
+            </LinearGradient>
+          </View>
 
-      <TouchableOpacity style={styles.fbBtn}>
-        <Text style={styles.fbText}>Continue with Facebook</Text>
-      </TouchableOpacity>
+          {/* App Name */}
+          <Text style={styles.appName}>HeartSync</Text>
 
-      <TouchableOpacity
-        style={styles.phoneBtn}
-        onPress={() => navigation.navigate("Login")}
-      >
-        <Text style={styles.phoneText}>Use phone number</Text>
-      </TouchableOpacity>
+          {/* Tagline */}
+          <Text style={styles.tagline}>
+            Where Hearts Connect, Love Finds Its Sync.
+          </Text>
+        </View>
 
-      <Text style={styles.footer}>
-        By signing up you agree to our Terms and Conditions
-      </Text>
-      <Text style={styles.footer}>See how we use your data in our Privacy Policy</Text>
-    </View>
+        {/* Buttons Section */}
+        <View style={styles.buttonsSection}>
+          {/* Apple Login Button */}
+          <TouchableOpacity
+            style={[styles.button, styles.appleButton]}
+            onPress={handleAppleLogin}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name="logo-apple"
+              size={22}
+              color="#fff"
+              style={styles.buttonIcon}
+            />
+            <Text style={[styles.buttonText, styles.appleButtonText]}>
+              Continue with Apple
+            </Text>
+          </TouchableOpacity>
+
+          {/* Facebook Login Button */}
+          <TouchableOpacity
+            style={[styles.button, styles.facebookButton]}
+            onPress={handleFacebookLogin}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name="logo-facebook"
+              size={22}
+              color="#fff"
+              style={styles.buttonIcon}
+            />
+            <Text style={[styles.buttonText, styles.facebookButtonText]}>
+              Continue with Facebook
+            </Text>
+          </TouchableOpacity>
+
+          {/* Phone Number Button */}
+          <TouchableOpacity
+            style={styles.phoneButton}
+            onPress={handlePhoneLogin}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={[COLORS.primaryLight, COLORS.primary]}
+              style={styles.phoneGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              <Ionicons
+                name="call-outline"
+                size={22}
+                color="#fff"
+                style={styles.buttonIcon}
+              />
+              <Text style={[styles.buttonText, styles.phoneButtonText]}>
+                Use phone number
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+
+        {/* Footer Section */}
+        <View style={styles.footerSection}>
+          <Text style={styles.footerText}>
+            By signing up you agree to our{" "}
+            <Text style={styles.linkText}>Terms and Conditions</Text>
+          </Text>
+          <Text style={styles.footerText}>
+            See how we use your data in our{" "}
+            <Text style={styles.linkText}>Privacy Policy</Text>
+          </Text>
+        </View>
+
+        {/* Bottom Indicator */}
+        <View style={styles.bottomIndicator} />
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#fff", padding: 20 },
-  logo: { width: 100, height: 100, marginBottom: 20, tintColor: "#8b5cf6" },
-  title: { fontSize: 28, fontWeight: "700", color: "#111" },
-  subtitle: { fontSize: 14, color: "#777", marginBottom: 40, textAlign: "center" },
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.white,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: SPACING.lg,
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
 
-  appleBtn: { backgroundColor: "#000", paddingVertical: 14, borderRadius: 30, width: "90%", marginBottom: 10 },
-  appleText: { color: "#fff", fontSize: 16, textAlign: "center", fontWeight: "600" },
+  // Logo Section
+  logoSection: {
+    alignItems: "center",
+    marginTop: SPACING["3xl"],
+    flex: 1,
+    justifyContent: "center",
+  },
+  logoContainer: {
+    marginBottom: SPACING.xl,
+  },
+  logoGradient: {
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    justifyContent: "center",
+    alignItems: "center",
+    ...SHADOWS.lg,
+  },
+  appName: {
+    fontSize: TYPOGRAPHY.fontSize["4xl"],
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
+    color: COLORS.text.primary,
+    marginBottom: SPACING.sm,
+  },
+  tagline: {
+    fontSize: TYPOGRAPHY.fontSize.base,
+    color: COLORS.text.secondary,
+    textAlign: "center",
+    lineHeight: TYPOGRAPHY.lineHeight.normal * TYPOGRAPHY.fontSize.base,
+    paddingHorizontal: SPACING.xl,
+  },
 
-  fbBtn: { backgroundColor: "#1877F2", paddingVertical: 14, borderRadius: 30, width: "90%", marginBottom: 10 },
-  fbText: { color: "#fff", fontSize: 16, textAlign: "center", fontWeight: "600" },
+  // Buttons Section
+  buttonsSection: {
+    width: "100%",
+    gap: SPACING.md,
+    marginBottom: SPACING.xl,
+  },
+  button: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.lg,
+    borderRadius: RADIUS.xl,
+    minHeight: 56,
+    ...SHADOWS.sm,
+  },
+  buttonIcon: {
+    marginRight: SPACING.sm,
+  },
+  buttonText: {
+    fontSize: TYPOGRAPHY.fontSize.lg,
+    fontWeight: TYPOGRAPHY.fontWeight.medium,
+  },
 
-  phoneBtn: { backgroundColor: "#00C6D7", paddingVertical: 14, borderRadius: 30, width: "90%", marginBottom: 20 },
-  phoneText: { color: "#fff", fontSize: 16, textAlign: "center", fontWeight: "600" },
+  // Apple Button
+  appleButton: {
+    backgroundColor: COLORS.apple,
+  },
+  appleButtonText: {
+    color: COLORS.white,
+  },
 
-  footer: { fontSize: 12, color: "#777", textAlign: "center", marginTop: 4 },
+  // Facebook Button
+  facebookButton: {
+    backgroundColor: COLORS.facebook,
+  },
+  facebookButtonText: {
+    color: COLORS.white,
+  },
+
+  // Phone Button
+  phoneButton: {
+    borderRadius: RADIUS.xl,
+    overflow: "hidden",
+    ...SHADOWS.sm,
+  },
+  phoneGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.lg,
+    minHeight: 56,
+  },
+  phoneButtonText: {
+    color: COLORS.white,
+  },
+
+  // Footer Section
+  footerSection: {
+    alignItems: "center",
+    marginBottom: SPACING.lg,
+  },
+  footerText: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    color: COLORS.text.tertiary,
+    textAlign: "center",
+    marginBottom: SPACING.xs,
+    lineHeight: TYPOGRAPHY.lineHeight.normal * TYPOGRAPHY.fontSize.sm,
+  },
+  linkText: {
+    color: COLORS.primary,
+    textDecorationLine: "underline",
+  },
+
+  // Bottom Indicator
+  bottomIndicator: {
+    width: 140,
+    height: 4,
+    backgroundColor: COLORS.text.primary,
+    borderRadius: RADIUS.sm,
+    marginBottom: SPACING.sm,
+  },
 });

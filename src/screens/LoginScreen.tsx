@@ -1,324 +1,251 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from "react-native";
+import React from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
+  StatusBar,
+} from "react-native";
 import { useNavigate } from "react-router-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useAuthContext } from "../context/AuthContext";
-import { handleApiError } from "../utils/error-handler";
+import { LinearGradient } from "expo-linear-gradient";
+import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from "../constants/theme";
 
 export default function LoginScreen() {
   const navigate = useNavigate();
-  const { login } = useAuthContext();
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [showLoginForm, setShowLoginForm] = useState(false);
 
-  const handleLogin = async () => {
-    if (!username.trim() || !password.trim()) {
-      Alert.alert("Error", "Please enter username and password");
-      return;
-    }
-
-    // Debug: Log what we're sending
-    console.log('🔐 Login attempt:', {
-      username: username.trim(),
-      password: password.trim(),
-      usernameLength: username.trim().length,
-      passwordLength: password.trim().length
-    });
-
-    try {
-      setLoading(true);
-      console.log('🚀 Starting login process...');
-      
-      await login(username, password);
-      console.log('✅ Login successful');
-      
-      // Navigate to Swipe screen after successful login
-      console.log('🔄 Navigating to Swipe for testing...');
-      navigate('/swipe', { replace: true });
-      console.log('✨ Navigation completed!');
-    } catch (error) {
-      console.error('❌ Login error:', error);
-      Alert.alert("Login Failed", handleApiError(error));
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Debug: Log when component renders
+  console.log("🔍 LoginScreen rendered");
 
   const handleAppleLogin = () => {
-    // TODO: Implement Apple OAuth
-    Alert.alert("Coming Soon", "Apple login will be available soon");
+    // TODO: Implement Apple Sign-In
+    console.log("Apple login pressed");
   };
 
   const handleFacebookLogin = () => {
-    // TODO: Implement Facebook OAuth
-    Alert.alert("Coming Soon", "Facebook login will be available soon");
+    // TODO: Implement Facebook login
+    console.log("Facebook login pressed");
   };
 
   const handlePhoneLogin = () => {
-    // Show login form for now
-    setShowLoginForm(true);
+    // Navigate to phone login screen
+    console.log("📱 Phone login button clicked - navigating to /phone-login");
+    navigate("/phone-login");
   };
 
   return (
-    <View style={styles.container}>
-      {/* Logo Section */}
-      <View style={styles.logoContainer}>
-        <View style={styles.logoCircle}>
-          <View style={styles.logoInnerCircle}>
-            <Ionicons name="heart" size={60} color="#fff" />
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
+      
+      {/* Main Content */}
+      <View style={styles.content}>
+        {/* Logo Section */}
+        <View style={styles.logoSection}>
+          {/* Logo with Gradient Circle */}
+          <View style={styles.logoContainer}>
+            <LinearGradient
+              colors={[COLORS.primaryLight, COLORS.primary, COLORS.primaryDark]}
+              style={styles.logoGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <Ionicons name="heart" size={60} color="#fff" />
+            </LinearGradient>
           </View>
-        </View>
-        <Text style={styles.title}>HeartSync</Text>
-        <Text style={styles.subtitle}>Where Hearts Connect, Love Finds Its Sync.</Text>
-      </View>
 
-      {showLoginForm ? (
-        /* Login Form */
-        <View style={styles.formContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Username"
-            value={username}
-            onChangeText={setUsername}
-            autoCapitalize="none"
-            editable={!loading}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            editable={!loading}
-          />
-          <TouchableOpacity
-            style={[styles.loginBtn, loading && styles.btnDisabled]}
-            onPress={handleLogin}
-            disabled={loading}
+          {/* App Name */}
+          <Text style={styles.appName}>HeartSync</Text>
+          
+          {/* Tagline */}
+          <Text style={styles.tagline}>
+            Where Hearts Connect, Love Finds Its Sync.
+          </Text>
+        </View>
+
+        {/* Buttons Section */}
+        <View style={styles.buttonsSection}>
+          {/* Apple Login Button */}
+          <TouchableOpacity 
+            style={[styles.button, styles.appleButton]} 
+            onPress={handleAppleLogin}
           >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.btnText}>Login</Text>
-            )}
+            <Ionicons name="logo-apple" size={20} color="#fff" style={styles.buttonIcon} />
+            <Text style={[styles.buttonText, styles.appleButtonText]}>
+              Continue with Apple
+            </Text>
           </TouchableOpacity>
-          
-          {/* Test Login Buttons - Now Working! */}
-          <View style={styles.testButtonsContainer}>
-            <TouchableOpacity
-              style={[styles.testBtn, { backgroundColor: "#4CAF50" }]}
-              onPress={async () => {
-                setUsername("admin");
-                setPassword("admin");
-                console.log("🧪 Testing admin login");
-                setTimeout(() => handleLogin(), 500);
-              }}
-              disabled={loading}
-            >
-              <Text style={styles.testBtnText}>🔑 Login as Admin (Premium)</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[styles.testBtn, { backgroundColor: "#2196F3" }]}
-              onPress={async () => {
-                setUsername("ava");
-                setPassword("password");
-                console.log("🧪 Testing ava login");
-                setTimeout(() => handleLogin(), 500);
-              }}
-              disabled={loading}
-            >
-              <Text style={styles.testBtnText}>🔑 Login as Ava (Free)</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[styles.testBtn, { backgroundColor: "#FF9800" }]}
-              onPress={async () => {
-                setUsername("joshua");
-                setPassword("password");
-                console.log("🧪 Testing joshua login");
-                setTimeout(() => handleLogin(), 500);
-              }}
-              disabled={loading}
-            >
-              <Text style={styles.testBtnText}>🔑 Login as Joshua (Premium)</Text>
-            </TouchableOpacity>
-          </View>
-          
-          <TouchableOpacity onPress={() => setShowLoginForm(false)}>
-            <Text style={styles.backText}>← Back to social login</Text>
+
+          {/* Facebook Login Button */}
+          <TouchableOpacity 
+            style={[styles.button, styles.facebookButton]} 
+            onPress={handleFacebookLogin}
+          >
+            <Ionicons name="logo-facebook" size={20} color="#fff" style={styles.buttonIcon} />
+            <Text style={[styles.buttonText, styles.facebookButtonText]}>
+              Continue with Facebook
+            </Text>
+          </TouchableOpacity>
+
+          {/* Phone Number Button */}
+          <TouchableOpacity 
+            style={[styles.button, styles.phoneButton]} 
+            onPress={handlePhoneLogin}
+          >
+            <Ionicons name="call-outline" size={20} color="#fff" style={styles.buttonIcon} />
+            <Text style={[styles.buttonText, styles.phoneButtonText]}>
+              Use phone number
+            </Text>
+          </TouchableOpacity>
+
+          {/* Debug Navigation Button */}
+          <TouchableOpacity 
+            style={[styles.button, { backgroundColor: '#FF6B6B', marginTop: 10 }]} 
+            onPress={() => {
+              console.log("🧪 Debug: Testing navigation to /phone-login");
+              navigate("/phone-login");
+            }}
+          >
+            <Text style={[styles.buttonText, { color: '#fff' }]}>
+              🧪 Debug: Go to Phone Login
+            </Text>
           </TouchableOpacity>
         </View>
-      ) : (
-        /* Social Login Buttons */
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.appleBtn} onPress={handleAppleLogin}>
-            <Ionicons name="logo-apple" size={24} color="#fff" />
-            <Text style={styles.btnText}>Continue with Apple</Text>
-          </TouchableOpacity>
 
-          <TouchableOpacity style={styles.facebookBtn} onPress={handleFacebookLogin}>
-            <Ionicons name="logo-facebook" size={24} color="#fff" />
-            <Text style={styles.btnText}>Continue with Facebook</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.phoneBtn} onPress={handlePhoneLogin}>
-            <Ionicons name="chatbubble-ellipses" size={24} color="#fff" />
-            <Text style={styles.btnText}>Login with Username</Text>
-          </TouchableOpacity>
+        {/* Footer Section */}
+        <View style={styles.footerSection}>
+          <Text style={styles.footerText}>
+            By signing up you agree to our{" "}
+            <Text style={styles.linkText}>Terms and Conditions</Text>
+          </Text>
+          <Text style={styles.footerText}>
+            See how we use your data in our{" "}
+            <Text style={styles.linkText}>Privacy Policy</Text>
+          </Text>
         </View>
-      )}
 
-      {/* Terms and Conditions */}
-      <View style={styles.termsContainer}>
-        <Text style={styles.termsText}>
-          By signing up you agree to our{" "}
-          <Text style={styles.termsLink}>Terms and Conditions</Text>
-        </Text>
-        <Text style={styles.termsText}>
-          See how we use your data in our{" "}
-          <Text style={styles.termsLink}>Privacy Policy</Text>
-        </Text>
+        {/* Bottom Indicator */}
+        <View style={styles.bottomIndicator} />
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
-    paddingHorizontal: 20,
-    justifyContent: "space-between",
-    paddingTop: 80,
-    paddingBottom: 40,
+    backgroundColor: COLORS.white,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: SPACING.lg,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  
+  // Logo Section
+  logoSection: {
+    alignItems: 'center',
+    marginTop: SPACING['3xl'],
+    flex: 1,
+    justifyContent: 'center',
   },
   logoContainer: {
-    alignItems: "center",
-    marginTop: 40,
+    marginBottom: SPACING.xl,
   },
-  logoCircle: {
+  logoGradient: {
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: "#E8D5FF",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...SHADOWS.lg,
   },
-  logoInnerCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: "#9D4EDD",
-    justifyContent: "center",
-    alignItems: "center",
+  appName: {
+    fontSize: TYPOGRAPHY.fontSize['4xl'],
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
+    color: COLORS.text.primary,
+    marginBottom: SPACING.sm,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: "700",
-    color: "#222",
-    marginBottom: 8,
+  tagline: {
+    fontSize: TYPOGRAPHY.fontSize.base,
+    color: COLORS.text.secondary,
+    textAlign: 'center',
+    lineHeight: TYPOGRAPHY.lineHeight.normal * TYPOGRAPHY.fontSize.base,
   },
-  subtitle: {
-    fontSize: 14,
-    color: "#888",
-    textAlign: "center",
+
+  // Buttons Section
+  buttonsSection: {
+    width: '100%',
+    gap: SPACING.md,
+    marginBottom: SPACING.xl,
   },
-  buttonContainer: {
-    width: "100%",
-    gap: 15,
+  button: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.lg,
+    borderRadius: RADIUS.xl,
+    minHeight: 56,
+    ...SHADOWS.sm,
   },
-  formContainer: {
-    width: "100%",
-    gap: 15,
+  buttonIcon: {
+    marginRight: SPACING.sm,
   },
-  input: {
-    backgroundColor: "#f5f5f5",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderRadius: 30,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
+  buttonText: {
+    fontSize: TYPOGRAPHY.fontSize.lg,
+    fontWeight: TYPOGRAPHY.fontWeight.medium,
   },
-  loginBtn: {
-    backgroundColor: "#9D4EDD",
-    paddingVertical: 16,
-    borderRadius: 30,
-    alignItems: "center",
+  
+  // Apple Button
+  appleButton: {
+    backgroundColor: COLORS.apple,
   },
-  btnDisabled: {
-    opacity: 0.6,
+  appleButtonText: {
+    color: COLORS.white,
   },
-  backText: {
-    textAlign: "center",
-    color: "#9D4EDD",
-    fontSize: 15,
-    marginTop: 10,
+  
+  // Facebook Button
+  facebookButton: {
+    backgroundColor: COLORS.facebook,
   },
-  appleBtn: {
-    backgroundColor: "#1C1C1E",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 16,
-    borderRadius: 30,
-    gap: 10,
+  facebookButtonText: {
+    color: COLORS.white,
   },
-  facebookBtn: {
-    backgroundColor: "#1877F2",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 16,
-    borderRadius: 30,
-    gap: 10,
+  
+  // Phone Button
+  phoneButton: {
+    backgroundColor: COLORS.phone,
   },
-  phoneBtn: {
-    backgroundColor: "#00C6D7",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 16,
-    borderRadius: 30,
-    gap: 10,
+  phoneButtonText: {
+    color: COLORS.white,
   },
-  btnText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
+
+  // Footer Section
+  footerSection: {
+    alignItems: 'center',
+    marginBottom: SPACING.lg,
   },
-  testBtn: {
-    backgroundColor: "#FF6B6B",
-    paddingVertical: 12,
-    borderRadius: 25,
-    alignItems: "center",
-    marginTop: 5,
+  footerText: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    color: COLORS.text.tertiary,
+    textAlign: 'center',
+    marginBottom: SPACING.xs,
+    lineHeight: TYPOGRAPHY.lineHeight.normal * TYPOGRAPHY.fontSize.sm,
   },
-  testBtnText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "500",
+  linkText: {
+    color: COLORS.primary,
+    textDecorationLine: 'underline',
   },
-  testButtonsContainer: {
-    marginTop: 10,
-    gap: 5,
-  },
-  termsContainer: {
-    alignItems: "center",
-    paddingHorizontal: 20,
-  },
-  termsText: {
-    fontSize: 12,
-    color: "#888",
-    textAlign: "center",
-    lineHeight: 18,
-  },
-  termsLink: {
-    color: "#00C6D7",
-    textDecorationLine: "underline",
+
+  // Bottom Indicator
+  bottomIndicator: {
+    width: 140,
+    height: 4,
+    backgroundColor: COLORS.text.primary,
+    borderRadius: RADIUS.sm,
+    marginBottom: SPACING.sm,
   },
 });

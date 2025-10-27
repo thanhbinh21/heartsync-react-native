@@ -8,21 +8,47 @@ import {
   TextInput,
   Image,
   Alert,
+  ActivityIndicator,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import type { StackNavigationProp } from "@react-navigation/stack";
-import { RootStackParamList } from "../../App";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigate } from "react-router-native";
 import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
+import { userService } from "../services/user.service";
+import { useAuthContext } from "../context/AuthContext";
 
-type NavProp = StackNavigationProp<RootStackParamList, "CreateProfile">;
+// Helper function to convert image URI to base64
+const convertImageToBase64 = async (uri: string): Promise<string> => {
+  try {
+    const response = await fetch(uri);
+    const blob = await response.blob();
+    
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (typeof reader.result === 'string') {
+          resolve(reader.result);
+        } else {
+          reject(new Error('Failed to convert image'));
+        }
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error('Error converting image:', error);
+    throw error;
+  }
+};
+
 
 export default function CreateProfileScreen() {
-  const navigation = useNavigation<NavProp>();
+  const navigate = useNavigate();
+  const { user, logout } = useAuthContext();
   const [photos, setPhotos] = useState<string[]>([]);
   const [aboutMe, setAboutMe] = useState("");
   const [occupation, setOccupation] = useState("");
-  const [gender, setGender] = useState("Male");
+  const [gender, setGender] = useState("male");
   const [education, setEducation] = useState("");
   const [location, setLocation] = useState("NV 89104");
   const [height, setHeight] = useState("");
@@ -34,11 +60,62 @@ export default function CreateProfileScreen() {
   const [religion, setReligion] = useState("");
   const [interests, setInterests] = useState<string[]>(["Sci-fi movies"]);
   const [languages, setLanguages] = useState<string[]>(["English", "Finnish"]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [name, setName] = useState("");
+  const [age, setAge] = useState("");
+
+  // Handle session expired - clear storage and redirect to login
+  const handleSessionExpired = async () => {
+    console.log("🚨 Session expired - clearing storage and redirecting to login");
+    try {
+      await AsyncStorage.clear();
+      await logout();
+      Alert.alert(
+        "Session Expired", 
+        "Your session has expired. Please login again.", 
+        [
+          {
+            text: "OK",
+            onPress: () => navigate('/login')
+          }
+        ]
+      );
+    } catch (error) {
+      console.error("Error clearing storage:", error);
+      navigate('/login');
+    }
+  };
 
   const interestsList = ["Coffee brewing", "Trekking", "Sci-fi movies", "Art", "Music", "Travel"];
   const languagesList = ["English", "Finnish", "Spanish", "French", "German"];
 
-  const profileCompletion = 45; // Calculate based on filled fields
+  // Calculate profile completion dynamically
+  const calculateCompletion = (): number => {
+    const fields = [
+      // photos.length > 0,  // REMOVED - không yêu cầu photos nữa
+      aboutMe.length >= 20,
+      occupation,
+      gender,
+      education,
+      location,
+      height,
+      smoking,
+      drinking,
+      pets,
+      children,
+      zodiacSign,
+      religion,
+      interests.length > 0,
+      languages.length > 0,
+      name,
+      age,
+    ];
+    
+    const filledFields = fields.filter(Boolean).length;
+    return Math.round((filledFields / fields.length) * 100);
+  };
+
+  const profileCompletion = calculateCompletion();
 
   const pickImage = async () => {
     if (photos.length >= 6) {
@@ -88,14 +165,117 @@ export default function CreateProfileScreen() {
     }
   };
 
-  const handleSaveProfile = () => {
-    if (photos.length === 0) {
-      Alert.alert("Missing information", "Please add at least one photo");
+  const handleSaveProfile = async () => {
+    // Basic validation (bỏ qua yêu cầu photos)
+    if (!name || name.trim().length < 2) {
+      Alert.alert("Missing information", "Please enter your name");
       return;
     }
+
+    if (!age || parseInt(age) < 18 || parseInt(age) > 100) {
+      Alert.alert("Invalid age", "Please enter a valid age (18-100)");
+      return;
+    }
+
+    if (!aboutMe || aboutMe.trim().length < 20) {
+      Alert.alert("About me too short", "Please write at least 20 characters about yourself");
+      return;
+    }
+
+    if (interests.length === 0) {
+      Alert.alert("Missing interests", "Please select at least one interest");
+      return;
+    }
+
+    setIsLoading(true);
     
-    // Save profile logic here
-    navigation.navigate("Swipe");
+    try {
+      // Prepare profile data matching backend expectations
+      const profileData: any = {
+        name: name.trim(),
+        age: parseInt(age),
+        gender: gender.toLowerCase(),
+        aboutMe: aboutMe.trim(),
+        interests: interests,
+        languages: languages,
+        location: {
+          zipCode: location,
+        },
+      };
+
+      // Add optional fields only if they have values
+      if (occupation.trim()) profileData.occupation = occupation.trim();
+      if (education.trim()) profileData.education = education.trim();
+      if (height.trim()) profileData.height = height.trim();
+      if (smoking.trim()) profileData.smoking = smoking.trim();
+      if (drinking.trim()) profileData.drinking = drinking.trim();
+      if (pets.trim()) profileData.pets = pets.trim();
+      if (children.trim()) profileData.children = children.trim();
+      if (zodiacSign.trim()) profileData.zodiac = zodiacSign.trim();
+      if (religion.trim()) profileData.religion = religion.trim();
+
+      // Log data being sent
+      console.log("📤 Profile data to send:", {
+        ...profileData,
+        interests: profileData.interests?.length,
+        languages: profileData.languages?.length,
+      });
+
+      // Update profile via API
+      const result = await userService.updateProfile(profileData);
+      console.log("✅ Profile update successful:", result.profile?.name);
+      
+      // Get user ID for navigation
+      const userId = user?.id || result.id;
+      console.log("📱 Profile saved successfully, navigating to ProfileViewScreen with userId:", userId);
+      
+      // Navigate directly to ProfileViewScreen
+      navigate(`/profile-view/${userId}`);
+    } catch (error: any) {
+      console.error("❌ Error saving profile:", error);
+      
+      let errorMessage = "Failed to save profile. Please try again.";
+      
+      // Parse error from different sources
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+        console.log("📥 Server error message:", errorMessage);
+      } else if (error.message) {
+        console.log("📥 Error message:", error.message);
+        
+        if (error.message.includes('User not found') || 
+            error.message.includes('Invalid user ID') ||
+            error.message.includes('login again') ||
+            error.message.includes('not logged in') ||
+            error.message.includes('old userId')) {
+          console.log("🚨 User not found - session expired");
+          
+          Alert.alert(
+            "User ID Expired! 🚨", 
+            `Your user ID is outdated due to database reset.\n\nOld ID: ${user?.id}\nNew ID needed!\n\nPlease login again to get the new user ID.`,
+            [
+              { text: "Cancel", style: "cancel" },
+              { 
+                text: "Re-login Now", 
+                onPress: handleSessionExpired,
+                style: "default"
+              }
+            ]
+          );
+          return;
+        } else if (error.message.includes('non-JSON')) {
+          errorMessage = 'Server error. Please check your connection and try again.';
+        } else if (error.message.includes('Network')) {
+          errorMessage = 'Network error. Please check your internet connection.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      Alert.alert("Error", errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const renderDetailRow = (icon: any, label: string, value: string, onPress: () => void) => (
@@ -115,7 +295,7 @@ export default function CreateProfileScreen() {
     <ScrollView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity onPress={() => navigate(-1)}>
           <Ionicons name="chevron-back" size={24} color="#000" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Edit profile</Text>
@@ -132,8 +312,8 @@ export default function CreateProfileScreen() {
 
       {/* Photos Section */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Photos</Text>
-        <Text style={styles.sectionSubtitle}>The main photo is how you appear to others on the swipe view.</Text>
+        <Text style={styles.sectionTitle}>Photos (Optional)</Text>
+        <Text style={styles.sectionSubtitle}>You can add photos later. The main photo is how you appear to others on the swipe view.</Text>
         
         <View style={styles.photoGrid}>
           {/* Main Photo */}
@@ -184,27 +364,126 @@ export default function CreateProfileScreen() {
           multiline
           numberOfLines={4}
         />
+        <Text style={styles.charCount}>{aboutMe.length} / 500 characters</Text>
+      </View>
+
+      {/* Basic Info Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Basic information</Text>
+        <Text style={styles.requiredNote}>* Required fields</Text>
+        <TextInput
+          style={styles.input}
+          value={name}
+          onChangeText={setName}
+          placeholder="Your name *"
+          placeholderTextColor="#ccc"
+        />
+        <TextInput
+          style={styles.input}
+          value={age}
+          onChangeText={setAge}
+          placeholder="Your age *"
+          placeholderTextColor="#ccc"
+          keyboardType="number-pad"
+          maxLength={2}
+        />
       </View>
 
       {/* My Details Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>My details</Text>
-        {renderDetailRow("briefcase-outline", "Occupation", occupation, () => Alert.alert("Add Occupation"))}
-        {renderDetailRow("person-outline", "Gender & Pronouns", gender, () => Alert.alert("Select Gender"))}
-        {renderDetailRow("school-outline", "Education", education, () => Alert.alert("Add Education"))}
-        {renderDetailRow("location-outline", "Location", location, () => Alert.alert("Set Location"))}
+        {renderDetailRow("briefcase-outline", "Occupation", occupation, () => {
+          Alert.prompt("Occupation", "Enter your occupation", (text) => setOccupation(text));
+        })}
+        
+        {/* Gender Selection */}
+        <View style={styles.detailRow}>
+          <View style={styles.detailLeft}>
+            <Ionicons name="person-outline" size={20} color="#666" />
+            <Text style={styles.detailLabel}>Gender</Text>
+          </View>
+          <View style={styles.genderButtons}>
+            <TouchableOpacity 
+              style={[styles.genderButton, gender === "male" && styles.genderButtonActive]}
+              onPress={() => setGender("male")}
+            >
+              <Text style={[styles.genderButtonText, gender === "male" && styles.genderButtonTextActive]}>
+                Male
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.genderButton, gender === "female" && styles.genderButtonActive]}
+              onPress={() => setGender("female")}
+            >
+              <Text style={[styles.genderButtonText, gender === "female" && styles.genderButtonTextActive]}>
+                Female
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.genderButton, gender === "other" && styles.genderButtonActive]}
+              onPress={() => setGender("other")}
+            >
+              <Text style={[styles.genderButtonText, gender === "other" && styles.genderButtonTextActive]}>
+                Other
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        
+        {renderDetailRow("school-outline", "Education", education, () => {
+          Alert.prompt("Education", "Enter your education", (text) => setEducation(text));
+        })}
+        {renderDetailRow("location-outline", "Location", location, () => {
+          Alert.prompt("Location", "Enter your location (ZIP code)", (text) => setLocation(text));
+        })}
       </View>
 
       {/* Most People Want to Know */}
       <View style={styles.section}>
         <Text style={styles.sectionSubtitle}>Most people also want to know:</Text>
-        {renderDetailRow("resize-outline", "Height", height, () => Alert.alert("Add Height"))}
-        {renderDetailRow("cloud-outline", "Smoking", smoking, () => Alert.alert("Add Smoking"))}
-        {renderDetailRow("wine-outline", "Drinking", drinking, () => Alert.alert("Add Drinking"))}
-        {renderDetailRow("paw-outline", "Pets", pets, () => Alert.alert("Add Pets"))}
-        {renderDetailRow("people-outline", "Children", children, () => Alert.alert("Add Children"))}
-        {renderDetailRow("star-outline", "Zodiac sign", zodiacSign, () => Alert.alert("Add Zodiac"))}
-        {renderDetailRow("flower-outline", "Religion", religion, () => Alert.alert("Add Religion"))}
+        {renderDetailRow("resize-outline", "Height", height, () => {
+          Alert.prompt("Height", "Enter your height (e.g., 5'6\" or 168cm)", (text) => setHeight(text));
+        })}
+        {renderDetailRow("cloud-outline", "Smoking", smoking, () => {
+          Alert.alert("Smoking", "Select your smoking preference", [
+            { text: "Never", onPress: () => setSmoking("Never") },
+            { text: "Occasionally", onPress: () => setSmoking("Occasionally") },
+            { text: "Regularly", onPress: () => setSmoking("Regularly") },
+            { text: "Cancel", style: "cancel" },
+          ]);
+        })}
+        {renderDetailRow("wine-outline", "Drinking", drinking, () => {
+          Alert.alert("Drinking", "Select your drinking preference", [
+            { text: "Never", onPress: () => setDrinking("Never") },
+            { text: "Socially", onPress: () => setDrinking("Socially") },
+            { text: "Regularly", onPress: () => setDrinking("Regularly") },
+            { text: "Cancel", style: "cancel" },
+          ]);
+        })}
+        {renderDetailRow("paw-outline", "Pets", pets, () => {
+          Alert.alert("Pets", "Select your pet preference", [
+            { text: "Dog lover", onPress: () => setPets("Dog lover") },
+            { text: "Cat lover", onPress: () => setPets("Cat lover") },
+            { text: "Both", onPress: () => setPets("Both") },
+            { text: "None", onPress: () => setPets("None") },
+            { text: "Cancel", style: "cancel" },
+          ]);
+        })}
+        {renderDetailRow("people-outline", "Children", children, () => {
+          Alert.alert("Children", "Select your preference", [
+            { text: "Have children", onPress: () => setChildren("Have children") },
+            { text: "Want children", onPress: () => setChildren("Want children") },
+            { text: "Don't want", onPress: () => setChildren("Don't want") },
+            { text: "Open to children", onPress: () => setChildren("Open to children") },
+            { text: "Cancel", style: "cancel" },
+          ]);
+        })}
+        {renderDetailRow("star-outline", "Zodiac sign", zodiacSign, () => {
+          Alert.prompt("Zodiac Sign", "Enter your zodiac sign", (text) => setZodiacSign(text));
+        })}
+        {renderDetailRow("flower-outline", "Religion", religion, () => {
+          Alert.prompt("Religion", "Enter your religion (optional)", (text) => setReligion(text));
+        })}
       </View>
 
       {/* Interests Section */}
@@ -274,6 +553,24 @@ export default function CreateProfileScreen() {
         {renderDetailRow("logo-twitter", "Twitter", "", () => Alert.alert("Link Twitter"))}
       </View>
 
+      {/* Save Button */}
+      <View style={styles.section}>
+        <TouchableOpacity 
+          style={[styles.saveButton, isLoading && styles.saveButtonDisabled]} 
+          onPress={handleSaveProfile}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.saveButtonText}>Save Profile</Text>
+          )}
+        </TouchableOpacity>
+
+     
+       
+      </View>
+
       <View style={styles.bottomSpacer} />
     </ScrollView>
   );
@@ -338,6 +635,12 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     lineHeight: 18,
   },
+  requiredNote: {
+    fontSize: 12,
+    color: "#FF6B9D",
+    marginBottom: 10,
+    fontStyle: "italic",
+  },
   photoGrid: {
     flexDirection: "row",
     gap: 10,
@@ -391,6 +694,23 @@ const styles = StyleSheet.create({
     height: 100,
     textAlignVertical: "top",
   },
+  charCount: {
+    fontSize: 12,
+    color: "#999",
+    textAlign: "right",
+    marginTop: 5,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: "#333",
+    backgroundColor: "#fff",
+    marginBottom: 12,
+  },
   detailRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -421,6 +741,30 @@ const styles = StyleSheet.create({
   detailAdd: {
     fontSize: 15,
     color: "#ccc",
+  },
+  genderButtons: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  genderButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    backgroundColor: "#fff",
+  },
+  genderButtonActive: {
+    backgroundColor: "#00C6D7",
+    borderColor: "#00C6D7",
+  },
+  genderButtonText: {
+    fontSize: 14,
+    color: "#666",
+    fontWeight: "500",
+  },
+  genderButtonTextActive: {
+    color: "#fff",
   },
   interestsContainer: {
     flexDirection: "row",
@@ -510,7 +854,59 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#333",
   },
+  saveButton: {
+    backgroundColor: "#FF6B9D",
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 10,
+    shadowColor: "#FF6B9D",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  saveButtonDisabled: {
+    backgroundColor: "#FFB3C9",
+    opacity: 0.6,
+  },
+  saveButtonText: {
+    color: "#fff",
+    fontSize: 17,
+    fontWeight: "700",
+  },
   bottomSpacer: {
     height: 50,
+  },
+  
+  // Debug styles
+  debugSection: {
+    marginTop: 20,
+    padding: 15,
+    backgroundColor: "#f8f9fa",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#e9ecef",
+  },
+  debugTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#6c757d",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  debugButton: {
+    backgroundColor: "#6c757d",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    marginVertical: 4,
+    alignItems: "center",
+  },
+  debugButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "500",
   },
 });

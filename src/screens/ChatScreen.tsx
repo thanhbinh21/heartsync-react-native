@@ -10,7 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { useNavigate, useLocation } from "react-router-native";
+import { useNavigate, useLocation, useParams } from "react-router-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthContext } from "../context/AuthContext";
 import { messageService } from "../services/message.service";
@@ -45,8 +45,9 @@ const mockMessages = [
 export default function ChatScreen() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { matchId } = useParams<{ matchId: string }>();
   const { user: currentUser } = useAuthContext();
-  const { user: matchedUser, matchId } = location.state || {};
+  const { user: matchedUser } = location.state || {};
   
   const [messages, setMessages] = useState(mockMessages);
   const [inputText, setInputText] = useState("");

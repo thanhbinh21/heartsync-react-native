@@ -11,14 +11,19 @@ import {
   ActivityIndicator,
   Alert,
   Modal,
+  StatusBar,
+  SafeAreaView,
 } from "react-native";
 import { useNavigate } from "react-router-native";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { matchService } from "../services/match.service";
 import { DiscoverUser } from "../types/api";
 import { handleApiError } from "../utils/error-handler";
+import BottomNavigation from "../components/BottomNavigation";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const CARD_HEIGHT = SCREEN_HEIGHT * 0.7;
 
 export default function SwipeScreen() {
   const navigate = useNavigate();
@@ -26,9 +31,13 @@ export default function SwipeScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showMatchModal, setShowMatchModal] = useState(false);
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [pendingLikeUser, setPendingLikeUser] = useState<DiscoverUser | null>(null);
   const [matchData, setMatchData] = useState<{ matchId: string | null; user: DiscoverUser } | null>(null);
   const pan = useRef(new Animated.ValueXY()).current;
   const rotate = useRef(new Animated.Value(0)).current;
+  const modalScale = useRef(new Animated.Value(0.8)).current;
+  const modalFade = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     loadUsers();
@@ -107,33 +116,98 @@ export default function SwipeScreen() {
     });
   };
 
-  const handleLike = async () => {
+  const handleLike = () => {
     if (!currentUser) return;
     
     Animated.timing(pan, {
       toValue: { x: SCREEN_WIDTH + 100, y: 0 },
       duration: 300,
       useNativeDriver: false,
-    }).start(async () => {
-      try {
-        console.log('👍 Liking user:', currentUser.name);
-        const result = await matchService.like(currentUser.id);
-        console.log('💕 Like result:', result);
-        
-        if (result.isMatch) {
-          console.log('🎉 IT\'S A MATCH!');
-          setMatchData({
-            matchId: result.matchId,
-            user: currentUser
-          });
-          setShowMatchModal(true);
-        }
-      } catch (error) {
-        console.error("❌ Like error:", error);
-        Alert.alert("Error", handleApiError(error));
-      }
+    }).start(() => {
+      // Show confirmation modal
+      console.log('👍 Swiped right on:', currentUser.name);
+      setPendingLikeUser(currentUser);
+      setShowConfirmationModal(true);
+      
+      // Animate modal in
+      Animated.parallel([
+        Animated.spring(modalScale, {
+          toValue: 1,
+          tension: 50,
+          friction: 7,
+          useNativeDriver: true,
+        }),
+        Animated.timing(modalFade, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+      
       nextCard();
     });
+  };
+
+  const handleCancelLike = () => {
+    console.log('❌ User cancelled like confirmation');
+    Animated.parallel([
+      Animated.timing(modalScale, {
+        toValue: 0.8,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(modalFade, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setShowConfirmationModal(false);
+      setPendingLikeUser(null);
+    });
+  };
+
+  const handleConfirmLike = async () => {
+    if (!pendingLikeUser) return;
+    
+    console.log('✅ User confirmed like, processing...');
+    
+    // Close confirmation modal
+    Animated.parallel([
+      Animated.timing(modalScale, {
+        toValue: 0.8,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(modalFade, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setShowConfirmationModal(false);
+    });
+
+    try {
+      const result = await matchService.like(pendingLikeUser.id);
+      console.log('💕 Like result:', result);
+      
+      if (result.isMatch) {
+        console.log('🎉 IT\'S A MATCH!');
+        // Navigate to MatchFoundScreen
+        navigate('/match-found', {
+          state: {
+            matchedUser: pendingLikeUser,
+            matchId: result.matchId,
+          }
+        });
+      }
+      setPendingLikeUser(null);
+    } catch (error) {
+      console.error("❌ Like error:", error);
+      Alert.alert("Error", handleApiError(error));
+      setPendingLikeUser(null);
+    }
   };
 
   const handleSuperLike = async () => {
@@ -183,54 +257,67 @@ export default function SwipeScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.container, styles.centerContent]}>
-        <ActivityIndicator size="large" color="#9D4EDD" />
-      </View>
+      <SafeAreaView style={styles.container}>
+        <View style={[styles.container, styles.centerContent]}>
+          <ActivityIndicator size="large" color="#5AC8FA" />
+        </View>
+      </SafeAreaView>
     );
   }
 
   if (!currentUser || currentIndex >= users.length) {
     return (
-      <View style={[styles.container, styles.centerContent]}>
-        <Ionicons name="heart-dislike" size={80} color="#ccc" />
-        <Text style={styles.noMoreText}>No more users to show</Text>
-        <Text style={styles.debugText}>Total users loaded: {users.length}</Text>
-        <Text style={styles.debugText}>Current position: {currentIndex + 1}</Text>
-        
-        {users.length === 0 && (
-          <View style={styles.helpContainer}>
-            <Text style={styles.helpText}>Possible reasons:</Text>
-            <Text style={styles.helpBullet}>• Already swiped all users</Text>
-            <Text style={styles.helpBullet}>• No users match preferences</Text>
-            <Text style={styles.helpBullet}>• Backend needs more users</Text>
-          </View>
-        )}
-        
-        <TouchableOpacity style={styles.reloadButton} onPress={loadUsers}>
-          <Ionicons name="reload" size={20} color="#fff" style={{ marginRight: 8 }} />
-          <Text style={styles.reloadText}>Reload</Text>
-        </TouchableOpacity>
-      </View>
+      <SafeAreaView style={styles.container}>
+        <View style={[styles.container, styles.centerContent]}>
+          <Ionicons name="heart-dislike" size={80} color="#ccc" />
+          <Text style={styles.noMoreText}>No more users to show</Text>
+          <TouchableOpacity style={styles.reloadButton} onPress={loadUsers}>
+            <Text style={styles.reloadText}>Reload</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
+      
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigate("/matches")}>
-          <Ionicons name="chatbubbles" size={28} color="#FF4458" />
+        <TouchableOpacity style={styles.headerButton}>
+          <Ionicons name="menu" size={28} color="#333" />
         </TouchableOpacity>
-        <View style={styles.logoPlaceholder}>
-          <Ionicons name="heart" size={24} color="#9D4EDD" />
-        </View>
-        <TouchableOpacity onPress={() => navigate("/filters")}>
-          <Ionicons name="options" size={28} color="#888" />
+        <TouchableOpacity style={styles.headerButton}>
+          <Ionicons name="arrow-back" size={28} color="#333" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>HeartSync</Text>
+        <TouchableOpacity 
+          style={styles.filterButton}
+          onPress={() => navigate("/filters")}
+        >
+          <Ionicons name="options" size={24} color="#333" />
         </TouchableOpacity>
       </View>
 
-      {/* Card */}
+      {/* Progress Bar */}
+      <View style={styles.progressContainer}>
+        <View style={styles.progressBar} />
+        <View style={[styles.progressBar, styles.progressBarInactive]} />
+      </View>
+
+      {/* Card Container */}
       <View style={styles.cardContainer}>
+        {/* Next Card Preview (behind) */}
+        {users[currentIndex + 1] && (
+          <View style={[styles.card, styles.nextCard]}>
+            <Image 
+              source={{ uri: users[currentIndex + 1].photos?.[0] || 'https://via.placeholder.com/400' }} 
+              style={styles.cardImage} 
+            />
+          </View>
+        )}
+
         <Animated.View
           {...panResponder.panHandlers}
           style={[
@@ -249,99 +336,114 @@ export default function SwipeScreen() {
             style={styles.cardImage} 
           />
           
-          {/* Like/Nope Overlay */}
-          <Animated.View
-            style={[
-              styles.likeOverlay,
-              {
-                opacity: pan.x.interpolate({
-                  inputRange: [0, SCREEN_WIDTH / 4],
-                  outputRange: [0, 1],
-                  extrapolate: "clamp",
-                }),
-              },
-            ]}
-          >
-            <Text style={styles.likeText}>LIKE</Text>
-          </Animated.View>
+          {/* Gradient Overlay */}
+          <LinearGradient
+            colors={['transparent', 'rgba(0,0,0,0.3)', 'rgba(0,0,0,0.7)']}
+            style={styles.gradientOverlay}
+          />
 
-          <Animated.View
-            style={[
-              styles.nopeOverlay,
-              {
-                opacity: pan.x.interpolate({
-                  inputRange: [-SCREEN_WIDTH / 4, 0],
-                  outputRange: [1, 0],
-                  extrapolate: "clamp",
-                }),
-              },
-            ]}
-          >
-            <Text style={styles.nopeText}>NOPE</Text>
-          </Animated.View>
-
-          {/* User Info */}
-          <View style={styles.cardInfo}>
-            <View style={styles.userInfo}>
-              <Text style={styles.userName}>
-                {currentUser.name || 'Unknown'}, {currentUser.age || 0}
-                {currentUser.verified && (
-                  <Text> </Text>
-                )}
+          {/* Swipe Instructions Overlay */}
+          <View style={styles.instructionsOverlay}>
+            {/* Right Swipe */}
+            <View style={styles.rightSwipeInstruction}>
+              <Ionicons name="arrow-forward" size={24} color="#fff" style={styles.instructionIcon} />
+              <Text style={styles.instructionTitle}>Swipe right if you like</Text>
+              <Text style={styles.instructionSubtitle}>
+                If the person also swipes right on you,{'\n'}
+                it's a match and you can connect.
               </Text>
-              {currentUser.verified && (
-                <View style={styles.verifiedBadge}>
-                  <Ionicons name="checkmark-circle" size={18} color="#4ECDC4" />
-                </View>
-              )}
-              <Text style={styles.userBio}>{currentUser.bio || 'No bio'}</Text>
-              <View style={styles.distanceRow}>
-                <Ionicons name="location" size={14} color="#fff" />
-                <Text style={styles.distance}>
-                  {currentUser.location || 'Location'} • {currentUser.job || 'Occupation'}
-                </Text>
-              </View>
-              
-              {/* Interests */}
-              {currentUser.interests && currentUser.interests.length > 0 && (
-                <View style={styles.interestsContainer}>
-                  {currentUser.interests.slice(0, 3).map((interest, index) => (
-                    <View key={index} style={styles.interestTag}>
-                      <Text style={styles.interestText}>{interest}</Text>
-                    </View>
-                  ))}
-                  {currentUser.interests.length > 3 && (
-                    <View style={styles.interestTag}>
-                      <Text style={styles.interestText}>+{currentUser.interests.length - 3}</Text>
-                    </View>
-                  )}
-                </View>
-              )}
             </View>
-            <TouchableOpacity
-              style={styles.infoButton}
-              onPress={() => navigate("/profile-view", { state: { user: currentUser } })}
-            >
-              <Ionicons name="information-circle" size={28} color="#fff" />
-            </TouchableOpacity>
+
+            {/* Left Swipe */}
+            <View style={styles.leftSwipeInstruction}>
+              <Ionicons name="arrow-back" size={24} color="#fff" style={styles.instructionIcon} />
+              <Text style={styles.instructionTitle}>Swipe left to pass</Text>
+              <Text style={styles.instructionSubtitle}>
+                If the person is not your cup of tea,{'\n'}
+                simply pass. It's that easy!
+              </Text>
+            </View>
+          </View>
+
+          {/* User Info at Bottom */}
+          <View style={styles.cardInfo}>
+            <Text style={styles.userName}>
+              {currentUser.name || 'Unknown'}, {currentUser.age || 0}{' '}
+              {currentUser.verified && (
+                <Ionicons name="checkmark-circle" size={22} color="#4ECDC4" />
+              )}
+            </Text>
+            
+            <View style={styles.userDetails}>
+              <View style={styles.genderTag}>
+                <Text style={styles.genderText}>she/her/hers</Text>
+              </View>
+            </View>
+
+            <View style={styles.locationRow}>
+              <Ionicons name="briefcase-outline" size={14} color="#fff" />
+              <Text style={styles.locationText}>
+                {currentUser.job || 'Business Analyst'} at {currentUser.location || 'Tech'}
+              </Text>
+            </View>
           </View>
         </Animated.View>
       </View>
 
-      {/* Action Buttons */}
-      <View style={styles.actionsContainer}>
-        <TouchableOpacity style={styles.actionButton} onPress={handlePass}>
-          <Ionicons name="close" size={32} color="#FF4458" />
-        </TouchableOpacity>
+      {/* Bottom Navigation */}
+      <BottomNavigation activeRoute="/swipe" />
 
-        <TouchableOpacity style={[styles.actionButton, styles.superLikeButton]} onPress={handleSuperLike}>
-          <Ionicons name="star" size={24} color="#00C6D7" />
-        </TouchableOpacity>
+      {/* Confirmation Modal (when swipe right) */}
+      <Modal
+        visible={showConfirmationModal}
+        transparent
+        animationType="none"
+        onRequestClose={handleCancelLike}
+      >
+        <View style={styles.confirmationOverlay}>
+          <Animated.View 
+            style={[
+              styles.confirmationModal,
+              {
+                transform: [{ scale: modalScale }],
+                opacity: modalFade,
+              }
+            ]}
+          >
+            {/* Success Icon */}
+            <View style={styles.confirmIconContainer}>
+              <View style={styles.confirmIconCircle}>
+                <Ionicons name="arrow-forward" size={28} color="#4ECDC4" />
+              </View>
+            </View>
 
-        <TouchableOpacity style={[styles.actionButton, styles.likeButton]} onPress={handleLike}>
-          <Ionicons name="heart" size={32} color="#4CAF50" />
-        </TouchableOpacity>
-      </View>
+            {/* Title */}
+            <Text style={styles.confirmTitle}>You've just swiped right!</Text>
+
+            {/* Description */}
+            <Text style={styles.confirmDescription}>
+              By swiping right, you're expressing interest in this person. If they also swipe right on your profile, it's a match! Do you want to continue?
+            </Text>
+
+            {/* Action Buttons */}
+            <View style={styles.confirmButtonContainer}>
+              <TouchableOpacity 
+                style={styles.confirmCancelButton}
+                onPress={handleCancelLike}
+              >
+                <Text style={styles.confirmCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.confirmContinueButton}
+                onPress={handleConfirmLike}
+              >
+                <Text style={styles.confirmContinueText}>Continue</Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        </View>
+      </Modal>
 
       {/* Match Modal */}
       <Modal
@@ -353,13 +455,11 @@ export default function SwipeScreen() {
         <View style={styles.matchModalOverlay}>
           <View style={styles.matchModalContainer}>
             <View style={styles.matchModalContent}>
-              {/* Celebration Icons */}
               <View style={styles.matchIconsContainer}>
-                <Ionicons name="heart" size={80} color="#FF6B6B" />
+                <Ionicons name="heart" size={80} color="#FF6B9D" />
                 <Text style={styles.matchTitle}>It's a Match! 🎉</Text>
               </View>
 
-              {/* User Info */}
               {matchData && (
                 <>
                   <View style={styles.matchUserContainer}>
@@ -375,17 +475,13 @@ export default function SwipeScreen() {
                     </Text>
                   </View>
 
-                  {/* Action Buttons */}
                   <View style={styles.matchModalButtons}>
                     <TouchableOpacity
                       style={styles.sendMessageBtn}
                       onPress={() => {
                         setShowMatchModal(false);
-                        navigate('/chat', { 
-                          state: {
-                            matchId: matchData.matchId,
-                            user: matchData.user 
-                          }
+                        navigate(`/chat/${matchData.matchId}`, { 
+                          state: { user: matchData.user }
                         });
                       }}
                     >
@@ -405,128 +501,146 @@ export default function SwipeScreen() {
           </View>
         </View>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#F8F8F8",
   },
   centerContent: {
     justifyContent: "center",
     alignItems: "center",
-    gap: 20,
   },
   noMoreText: {
     fontSize: 18,
-    color: "#888",
+    color: "#666",
     marginTop: 20,
+    fontWeight: "600",
   },
   reloadButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#9D4EDD",
+    marginTop: 20,
     paddingHorizontal: 30,
     paddingVertical: 12,
+    backgroundColor: "#5AC8FA",
     borderRadius: 25,
-    marginTop: 20,
   },
   reloadText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
   },
-  debugText: {
-    color: "#888",
-    fontSize: 14,
-    marginTop: 8,
-  },
-  helpContainer: {
-    marginTop: 20,
-    paddingHorizontal: 40,
-    alignItems: "flex-start",
-  },
-  helpText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#666",
-    marginBottom: 8,
-  },
-  helpBullet: {
-    fontSize: 13,
-    color: "#888",
-    marginLeft: 10,
-    marginTop: 4,
-  },
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingTop: 50,
-    paddingBottom: 15,
+    paddingVertical: 12,
     backgroundColor: "#fff",
   },
-  logoPlaceholder: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#F3E5FF",
-    justifyContent: "center",
-    alignItems: "center",
+  headerButton: {
+    padding: 8,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#333",
+    flex: 1,
+    textAlign: "center",
+  },
+  filterButton: {
+    padding: 8,
+    backgroundColor: "#E3F2FD",
+    borderRadius: 8,
+  },
+  progressContainer: {
+    flexDirection: "row",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    gap: 8,
+    backgroundColor: "#fff",
+  },
+  progressBar: {
+    flex: 1,
+    height: 4,
+    backgroundColor: "#5AC8FA",
+    borderRadius: 2,
+  },
+  progressBarInactive: {
+    backgroundColor: "#E0E0E0",
   },
   cardContainer: {
     flex: 1,
-    justifyContent: "center",
     alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    justifyContent: "center",
   },
   card: {
     width: SCREEN_WIDTH - 40,
-    height: SCREEN_HEIGHT - 300,
-    borderRadius: 20,
+    height: CARD_HEIGHT,
+    borderRadius: 16,
     overflow: "hidden",
     backgroundColor: "#fff",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
     shadowRadius: 8,
-    elevation: 5,
+    elevation: 8,
+  },
+  nextCard: {
+    position: "absolute",
+    zIndex: -1,
+    opacity: 0.5,
+    transform: [{ scale: 0.95 }],
   },
   cardImage: {
     width: "100%",
     height: "100%",
   },
-  likeOverlay: {
+  gradientOverlay: {
     position: "absolute",
-    top: 50,
-    left: 30,
-    borderWidth: 4,
-    borderColor: "#4CAF50",
-    borderRadius: 8,
-    padding: 10,
-    transform: [{ rotate: "-20deg" }],
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: "50%",
   },
-  likeText: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#4CAF50",
-  },
-  nopeOverlay: {
+  instructionsOverlay: {
     position: "absolute",
-    top: 50,
-    right: 30,
-    borderWidth: 4,
-    borderColor: "#FF4458",
-    borderRadius: 8,
-    padding: 10,
-    transform: [{ rotate: "20deg" }],
+    top: "25%",
+    left: 0,
+    right: 0,
+    paddingHorizontal: 30,
   },
-  nopeText: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#FF4458",
+  rightSwipeInstruction: {
+    alignItems: "flex-end",
+    marginBottom: 40,
+  },
+  leftSwipeInstruction: {
+    alignItems: "flex-start",
+  },
+  instructionIcon: {
+    marginBottom: 8,
+  },
+  instructionTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#fff",
+    marginBottom: 8,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  instructionSubtitle: {
+    fontSize: 13,
+    color: "#fff",
+    textAlign: "left",
+    lineHeight: 18,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   cardInfo: {
     position: "absolute",
@@ -534,111 +648,52 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     padding: 20,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-end",
-  },
-  userInfo: {
-    flex: 1,
   },
   userName: {
-    fontSize: 26,
-    fontWeight: "bold",
+    fontSize: 28,
+    fontWeight: "700",
     color: "#fff",
-    marginBottom: 4,
+    marginBottom: 8,
   },
-  verifiedBadge: {
-    position: 'absolute',
-    right: -24,
-    top: 2,
-  },
-  userBio: {
-    fontSize: 15,
-    color: "#fff",
-    marginBottom: 4,
-  },
-  distanceRow: {
+  userDetails: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    marginBottom: 8,
   },
-  distance: {
-    fontSize: 13,
+  genderTag: {
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.3)",
+  },
+  genderText: {
+    fontSize: 12,
     color: "#fff",
+    fontWeight: "600",
   },
-  
-  // Interests styles
-  interestsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: 8,
+  locationRow: {
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
   },
-  interestTag: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+  locationText: {
+    fontSize: 14,
+    color: "#fff",
   },
-  interestText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  
-  infoButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  actionsContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: 20,
-    gap: 20,
-  },
-  actionButton: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: "#fff",
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  superLikeButton: {
-    width: 50,
-    height: 50,
-  },
-  likeButton: {
-    width: 60,
-    height: 60,
-  },
-  // Match Modal Styles
   matchModalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   matchModalContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 20,
-    padding: 30,
-    margin: 20,
-    maxWidth: 350,
-    width: '90%',
+    padding: 40,
+    alignItems: "center",
+    width: SCREEN_WIDTH - 60,
   },
   matchModalContent: {
     alignItems: 'center',
@@ -649,10 +704,16 @@ const styles = StyleSheet.create({
   },
   matchTitle: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: '#FF6B6B',
-    marginTop: 10,
-    textAlign: 'center',
+    fontWeight: "700",
+    color: "#333",
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  matchText: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 30,
   },
   matchUserContainer: {
     alignItems: 'center',
@@ -670,38 +731,104 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 10,
   },
-  matchText: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    lineHeight: 22,
-  },
   matchModalButtons: {
     width: '100%',
     gap: 15,
   },
   sendMessageBtn: {
-    backgroundColor: '#FF6B6B',
-    paddingVertical: 15,
+    backgroundColor: "#FF6B9D",
+    paddingHorizontal: 40,
+    paddingVertical: 14,
     borderRadius: 25,
-    alignItems: 'center',
+    width: "100%",
+    alignItems: "center",
+    marginBottom: 12,
   },
   sendMessageText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "700",
   },
   keepSwipingBtn: {
-    backgroundColor: 'transparent',
-    paddingVertical: 15,
-    borderRadius: 25,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#ddd',
+    paddingVertical: 12,
   },
   keepSwipingText: {
-    color: '#666',
+    color: "#666",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
+  },
+  // Confirmation Modal Styles
+  confirmationOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  confirmationModal: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 24,
+    marginHorizontal: 20,
+    width: SCREEN_WIDTH - 60,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  confirmIconContainer: {
+    marginBottom: 20,
+  },
+  confirmIconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#E8F8F5",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  confirmTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#333",
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  confirmDescription: {
+    fontSize: 15,
+    color: "#666",
+    textAlign: "center",
+    lineHeight: 22,
+    marginBottom: 24,
+  },
+  confirmButtonContainer: {
+    flexDirection: "row",
+    gap: 12,
+    width: "100%",
+  },
+  confirmCancelButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 25,
+    backgroundColor: "#F5F5F5",
+    alignItems: "center",
+  },
+  confirmCancelText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#666",
+  },
+  confirmContinueButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 25,
+    backgroundColor: "#4ECDC4",
+    alignItems: "center",
+  },
+  confirmContinueText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#fff",
   },
 });

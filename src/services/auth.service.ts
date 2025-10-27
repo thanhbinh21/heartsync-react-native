@@ -17,25 +17,24 @@ export const authService = {
       password,
     } as LoginRequest);
 
-    console.log('🔑 Auth service - Full response:', response);
+    console.log('🔑 Auth service - Full response:', JSON.stringify(response, null, 2));
     
-    // Cast response to include token and user properties
-    const authResponse = response as LoginResponse & { success: boolean };
+    // Cast to any to access token and user
+    const authData: any = response;
     
-    console.log('🔑 Auth service - Checking:', {
-      success: authResponse.success,
-      hasToken: !!authResponse.token,
-      hasUser: !!authResponse.user,
-      token: authResponse.token,
-      user: authResponse.user
-    });
-    
-    if (authResponse.success && authResponse.token) {
-      await apiClient.setToken(authResponse.token);
-      return authResponse;
+    // Backend returns: { success, message, token, user }
+    // Check if token exists (success might not be in response)
+    if (authData.token && authData.user) {
+      await apiClient.setToken(authData.token);
+      return {
+        success: true,
+        message: authData.message || 'Login successful',
+        token: authData.token,
+        user: authData.user
+      };
     }
 
-    throw new Error(response.message || 'Login failed');
+    throw new Error(authData.message || 'Login failed');
   },
 
   /**
@@ -49,15 +48,20 @@ export const authService = {
       email,
     });
 
-    // Cast response to include token and user properties
-    const authResponse = response as LoginResponse & { success: boolean };
+    // Cast to any to access token and user
+    const authData: any = response;
     
-    if (authResponse.success && authResponse.token) {
-      await apiClient.setToken(authResponse.token);
-      return authResponse;
+    if (authData.token && authData.user) {
+      await apiClient.setToken(authData.token);
+      return {
+        success: true,
+        message: authData.message || 'Registration successful',
+        token: authData.token,
+        user: authData.user
+      };
     }
 
-    throw new Error(response.message || 'Registration failed');
+    throw new Error(authData.message || 'Registration failed');
   },
 
   /**

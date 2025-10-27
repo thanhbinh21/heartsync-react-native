@@ -7,15 +7,11 @@ import {
   ScrollView,
   Switch,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import type { StackNavigationProp } from "@react-navigation/stack";
-import { RootStackParamList } from "../../App";
+import { useNavigate } from "react-router-native";
 import { Ionicons } from "@expo/vector-icons";
 
-type NavProp = StackNavigationProp<RootStackParamList, "Filters">;
-
 export default function FiltersScreen() {
-  const navigation = useNavigation<NavProp>();
+  const navigate = useNavigate();
   
   const [ageRange, setAgeRange] = useState([18, 35]);
   const [distance, setDistance] = useState(50);
@@ -39,7 +35,7 @@ export default function FiltersScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity onPress={() => navigate(-1)}>
           <Ionicons name="close" size={28} color="#000" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Filters</Text>
@@ -173,7 +169,7 @@ export default function FiltersScreen() {
           </Text>
           <TouchableOpacity 
             style={styles.upgradeButton}
-            onPress={() => navigation.navigate("Subscription")}
+            onPress={() => navigate("/subscription")}
           >
             <Text style={styles.upgradeButtonText}>Upgrade Now</Text>
           </TouchableOpacity>
@@ -186,7 +182,7 @@ export default function FiltersScreen() {
       <View style={styles.footer}>
         <TouchableOpacity
           style={styles.applyButton}
-          onPress={() => navigation.goBack()}
+          onPress={() => navigate(-1)}
         >
           <Text style={styles.applyButtonText}>Apply Filters</Text>
         </TouchableOpacity>

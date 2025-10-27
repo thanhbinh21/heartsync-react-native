@@ -5,10 +5,11 @@ import { useAuthContext } from '../context/AuthContext';
 // Import screens
 import StartedScreen from '../screens/StartedScreen';
 import LoginScreen from '../screens/LoginScreen';
-import HomeScreen from '../screens/HomeScreen';
+import PhoneLoginScreen from '../screens/PhoneLoginScreen';
 import CreateProfileScreen from '../screens/CreateProfileScreen';
 import SwipeScreen from '../screens/SwipeScreen';
 import SwipeConfirmationScreen from '../screens/SwipeConfirmationScreen';
+import MatchFoundScreen from '../screens/MatchFoundScreen';
 import ProfileViewScreen from '../screens/ProfileViewScreen';
 import MatchesScreen from '../screens/MatchesScreen';
 import ChatScreen from '../screens/ChatScreen';
@@ -31,11 +32,20 @@ const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }
 const AuthRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuthContext();
 
+  console.log('🔍 AuthRoute - Auth state:', { isAuthenticated, isLoading });
+
   if (isLoading) {
+    console.log('🔍 AuthRoute - Still loading, showing null');
     return null; // Or a loading spinner
   }
 
-  return !isAuthenticated ? children : <Navigate to="/swipe" replace />;
+  if (!isAuthenticated) {
+    console.log('🔍 AuthRoute - Not authenticated, showing children');
+    return children;
+  } else {
+    console.log('🔍 AuthRoute - Already authenticated, redirecting to /swipe');
+    return <Navigate to="/swipe" replace />;
+  }
 };
 
 export default function AppRouter() {
@@ -54,6 +64,14 @@ export default function AppRouter() {
             </AuthRoute>
           } 
         />
+        <Route 
+          path="/phone-login" 
+          element={
+            <AuthRoute>
+              <PhoneLoginScreen />
+            </AuthRoute>
+          } 
+        />
         
         {/* Protected Routes */}
         <Route 
@@ -64,14 +82,7 @@ export default function AppRouter() {
             </ProtectedRoute>
           } 
         />
-        <Route 
-          path="/home" 
-          element={
-            <ProtectedRoute>
-              <HomeScreen />
-            </ProtectedRoute>
-          } 
-        />
+     
         <Route 
           path="/create-profile" 
           element={
@@ -89,7 +100,15 @@ export default function AppRouter() {
           } 
         />
         <Route 
-          path="/profile-view" 
+          path="/match-found" 
+          element={
+            <ProtectedRoute>
+              <MatchFoundScreen />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/profile-view/:userId" 
           element={
             <ProtectedRoute>
               <ProfileViewScreen />
@@ -105,7 +124,7 @@ export default function AppRouter() {
           } 
         />
         <Route 
-          path="/chat" 
+          path="/chat/:matchId" 
           element={
             <ProtectedRoute>
               <ChatScreen />
@@ -113,7 +132,7 @@ export default function AppRouter() {
           } 
         />
         <Route 
-          path="/video-call" 
+          path="/video-call/:matchId" 
           element={
             <ProtectedRoute>
               <VideoCallScreen />
@@ -138,7 +157,8 @@ export default function AppRouter() {
         />
         
         {/* Default redirect */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<Navigate to="/started" replace />} />
+        <Route path="*" element={<Navigate to="/started" replace />} />
       </Routes>
     </NativeRouter>
   );
