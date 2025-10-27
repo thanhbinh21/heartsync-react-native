@@ -168,11 +168,14 @@ export default function SwipeScreen() {
   };
 
   const handleConfirmLike = async () => {
-    if (!pendingLikeUser) return;
+    if (!pendingLikeUser) {
+      console.log('⚠️ No pending like user');
+      return;
+    }
     
-    console.log('✅ User confirmed like, processing...');
+    console.log('✅ User confirmed like, processing...', pendingLikeUser.name);
     
-    // Close confirmation modal
+    // Close confirmation modal first
     Animated.parallel([
       Animated.timing(modalScale, {
         toValue: 0.8,
@@ -189,18 +192,30 @@ export default function SwipeScreen() {
     });
 
     try {
+      console.log('📡 Calling matchService.like for user:', pendingLikeUser.id);
       const result = await matchService.like(pendingLikeUser.id);
-      console.log('💕 Like result:', result);
+      console.log('💕 Like result received:', JSON.stringify(result, null, 2));
       
-      if (result.isMatch) {
-        console.log('🎉 IT\'S A MATCH!');
+      // 🧪 FORCE MATCH FOR TESTING - Remove this in production
+      const isMatch = true; // Force match for testing
+      // const isMatch = result.isMatch; // Use this in production
+      
+      if (isMatch) {
+        console.log('🎉 IT\'S A MATCH! Navigating to MatchFoundScreen...');
+        console.log('📱 Navigation params:', {
+          matchedUser: pendingLikeUser.name,
+          matchId: result.matchId || 'test-match-id',
+        });
+        
         // Navigate to MatchFoundScreen
         navigate('/match-found', {
           state: {
             matchedUser: pendingLikeUser,
-            matchId: result.matchId,
+            matchId: result.matchId || 'test-match-id',
           }
         });
+      } else {
+        console.log('👍 Like sent successfully, but no match yet');
       }
       setPendingLikeUser(null);
     } catch (error) {
@@ -288,7 +303,19 @@ export default function SwipeScreen() {
         <TouchableOpacity style={styles.headerButton}>
           <Ionicons name="menu" size={28} color="#333" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.headerButton}>
+        <TouchableOpacity 
+          style={styles.headerButton}
+          onPress={() => {
+            // Test navigation to MatchFoundScreen
+            console.log('🧪 Test: Navigating to MatchFoundScreen');
+            navigate('/match-found', {
+              state: {
+                matchedUser: currentUser,
+                matchId: 'test-match-id',
+              }
+            });
+          }}
+        >
           <Ionicons name="arrow-back" size={28} color="#333" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>HeartSync</Text>
