@@ -26,13 +26,22 @@ export default function MatchFoundScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const confettiAnim = useRef(new Animated.Value(0)).current;
 
+  // Debug logs
+  console.log('🎉 MatchFoundScreen - matchedUser:', matchedUser);
+  console.log('🖼️ MatchFoundScreen - currentUserPhoto:', currentUserPhoto);
+
   // Mock data if none provided
   const user = matchedUser || {
-    name: "John",
-    photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600",
+    name: "Emma Wilson",
+    photo: "https://randomuser.me/api/portraits/women/1.jpg",
   };
 
-  const myPhoto = currentUserPhoto || "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=600";
+  // Get photo from matchedUser (support both 'photo' and 'photos' fields)
+  const matchedUserPhoto = user.photos?.[0] || user.photo || "https://randomuser.me/api/portraits/women/1.jpg";
+  const myPhoto = currentUserPhoto || "https://randomuser.me/api/portraits/men/1.jpg";
+
+  console.log('📸 Left photo (myPhoto):', myPhoto);
+  console.log('📸 Right photo (matchedUserPhoto):', matchedUserPhoto);
 
   useEffect(() => {
     Animated.parallel([
@@ -150,7 +159,13 @@ export default function MatchFoundScreen() {
         >
           {/* Left Photo */}
           <View style={styles.photoWrapper}>
-            <Image source={{ uri: myPhoto }} style={styles.photo} />
+            <Image 
+              source={{ uri: myPhoto }} 
+              style={styles.photo}
+              resizeMode="cover"
+              onError={(e) => console.log('❌ Left photo error:', e.nativeEvent.error)}
+              onLoad={() => console.log('✅ Left photo loaded')}
+            />
           </View>
 
           {/* Heart Icon */}
@@ -160,7 +175,13 @@ export default function MatchFoundScreen() {
 
           {/* Right Photo */}
           <View style={styles.photoWrapper}>
-            <Image source={{ uri: user.photo }} style={styles.photo} />
+            <Image 
+              source={{ uri: matchedUserPhoto }} 
+              style={styles.photo}
+              resizeMode="cover"
+              onError={(e) => console.log('❌ Right photo error:', e.nativeEvent.error)}
+              onLoad={() => console.log('✅ Right photo loaded')}
+            />
           </View>
         </Animated.View>
 
@@ -272,7 +293,6 @@ const styles = StyleSheet.create({
   photo: {
     width: "100%",
     height: "100%",
-    resizeMode: "cover",
   },
   heartContainer: {
     width: 64,

@@ -21,7 +21,7 @@ const mockMatches = [
     id: "1",
     name: "Emma Wilson",
     age: 28,
-    photo: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300",
+    photo: "https://randomuser.me/api/portraits/women/1.jpg",
     lastMessage: "Hey! How's your day going?",
     timeAgo: "2h ago",
     isOnline: true,
@@ -31,7 +31,7 @@ const mockMatches = [
     id: "2",
     name: "Sarah Johnson",
     age: 25,
-    photo: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300",
+    photo: "https://randomuser.me/api/portraits/women/2.jpg",
     lastMessage: "That sounds great! 😊",
     timeAgo: "1d ago",
     isOnline: false,
@@ -41,7 +41,7 @@ const mockMatches = [
     id: "3",
     name: "Jessica Brown",
     age: 27,
-    photo: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300",
+    photo: "https://randomuser.me/api/portraits/women/3.jpg",
     lastMessage: "Thanks for the recommendation!",
     timeAgo: "3d ago",
     isOnline: true,
@@ -51,7 +51,7 @@ const mockMatches = [
     id: "4",
     name: "Rachel Miller",
     age: 26,
-    photo: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=300",
+    photo: "https://randomuser.me/api/portraits/women/4.jpg",
     lastMessage: "See you soon! 💕",
     timeAgo: "5d ago",
     isOnline: false,
@@ -102,16 +102,21 @@ export default function MatchesScreen() {
       
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.headerButton}>
-          <Ionicons name="menu" size={28} color="#333" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.headerButton} onPress={() => navigate(-1)}>
-          <Ionicons name="arrow-back" size={28} color="#333" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>HeartSync</Text>
-        <TouchableOpacity style={styles.headerButton}>
-          <Ionicons name="options" size={24} color="#333" />
-        </TouchableOpacity>
+        <View style={styles.headerLeft}>
+          <TouchableOpacity style={styles.headerButton} onPress={() => navigate(-1)}>
+            <Ionicons name="arrow-back" size={26} color="#333" />
+          </TouchableOpacity>
+        </View>
+        
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle}>HeartSync</Text>
+        </View>
+        
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.headerButton}>
+            <Ionicons name="options-outline" size={24} color="#333" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Tabs */}
@@ -157,20 +162,34 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 10,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 12,
     backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#F5F5F5",
+  },
+  headerLeft: {
+    width: 50,
+    alignItems: "flex-start",
+  },
+  headerCenter: {
+    flex: 1,
+    alignItems: "center",
+  },
+  headerRight: {
+    width: 50,
+    alignItems: "flex-end",
   },
   headerButton: {
     padding: 8,
+    borderRadius: 8,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: "700",
     color: "#333",
-    flex: 1,
-    textAlign: "center",
+    letterSpacing: 0.5,
   },
   tabsContainer: {
     flexDirection: "row",

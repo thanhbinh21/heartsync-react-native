@@ -21,12 +21,14 @@ import { matchService } from "../services/match.service";
 import { DiscoverUser } from "../types/api";
 import { handleApiError } from "../utils/error-handler";
 import BottomNavigation from "../components/BottomNavigation";
+import { useAuthContext } from "../context/AuthContext";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const CARD_HEIGHT = SCREEN_HEIGHT * 0.7;
 
 export default function SwipeScreen() {
   const navigate = useNavigate();
+  const { user: authUser } = useAuthContext();
   const [users, setUsers] = useState<DiscoverUser[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -193,6 +195,7 @@ export default function SwipeScreen() {
 
     try {
       console.log('📡 Calling matchService.like for user:', pendingLikeUser.id);
+      console.log('👤 Pending like user data:', JSON.stringify(pendingLikeUser, null, 2));
       const result = await matchService.like(pendingLikeUser.id);
       console.log('💕 Like result received:', JSON.stringify(result, null, 2));
       
@@ -203,7 +206,8 @@ export default function SwipeScreen() {
       if (isMatch) {
         console.log('🎉 IT\'S A MATCH! Navigating to MatchFoundScreen...');
         console.log('📱 Navigation params:', {
-          matchedUser: pendingLikeUser.name,
+          matchedUser: pendingLikeUser,
+          currentUserPhoto: authUser?.profile?.photos?.[0] || 'https://randomuser.me/api/portraits/men/1.jpg',
           matchId: result.matchId || 'test-match-id',
         });
         
@@ -211,6 +215,7 @@ export default function SwipeScreen() {
         navigate('/match-found', {
           state: {
             matchedUser: pendingLikeUser,
+            currentUserPhoto: authUser?.profile?.photos?.[0] || 'https://randomuser.me/api/portraits/men/1.jpg',
             matchId: result.matchId || 'test-match-id',
           }
         });

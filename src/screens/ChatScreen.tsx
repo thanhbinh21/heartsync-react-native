@@ -59,7 +59,7 @@ export default function ChatScreen() {
     user: {
       id: "1",
       name: "Emma Wilson",
-      photo: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300",
+      photo: "https://randomuser.me/api/portraits/women/1.jpg",
       age: 28,
     },
   };
@@ -150,7 +150,7 @@ export default function ChatScreen() {
 
           <TouchableOpacity 
             style={styles.videoButton}
-            onPress={() => navigate("/video-call", { state: { user: matchedUser } })}
+            onPress={() => navigate(`/video-call/${matchId || matchedUser?.id}`, { state: { user: matchedUser } })}
           >
             <Ionicons name="videocam" size={28} color="#FF6B9D" />
           </TouchableOpacity>

@@ -21,12 +21,13 @@ export default function VideoCallScreen() {
   const user = location.state?.user || {
     id: "1",
     name: "Emma Wilson",
-    photo: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300",
+    photo: "https://randomuser.me/api/portraits/women/1.jpg",
   };
   
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOff, setIsCameraOff] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -46,18 +47,46 @@ export default function VideoCallScreen() {
     navigate(-1);
   };
 
+  console.log('👤 VideoCallScreen - User data:', user);
+  console.log('📸 Photo URL:', user.photo);
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
       
       {/* Remote Video View */}
       <View style={styles.remoteVideo}>
+        {/* Background with blur */}
         <Image
           source={{ uri: user.photo }}
           style={styles.remoteVideoBackground}
           blurRadius={20}
+          resizeMode="cover"
+          onError={(error) => {
+            console.error('❌ Background image error:', error.nativeEvent.error);
+            setImageError(true);
+          }}
+          onLoad={() => console.log('✅ Background image loaded')}
         />
-        <Image source={{ uri: user.photo }} style={styles.remoteVideoImage} />
+        
+        {/* Main circular image */}
+        <Image 
+          source={{ uri: user.photo }} 
+          style={styles.remoteVideoImage}
+          resizeMode="cover"
+          onError={(error) => {
+            console.error('❌ Main image error:', error.nativeEvent.error);
+            setImageError(true);
+          }}
+          onLoad={() => console.log('✅ Main image loaded')}
+        />
+        
+        {imageError && (
+          <View style={styles.errorPlaceholder}>
+            <Ionicons name="person-circle" size={150} color="#555" />
+            <Text style={styles.errorText}>Image not available</Text>
+          </View>
+        )}
       </View>
 
       {/* Local Video View (PiP) */}
@@ -131,18 +160,20 @@ const styles = StyleSheet.create({
     height: height,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#000",
   },
   remoteVideoBackground: {
     position: "absolute",
     width: width,
     height: height,
+    opacity: 1,
   },
   remoteVideoImage: {
-    width: width * 0.6,
-    height: width * 0.6,
-    borderRadius: (width * 0.6) / 2,
-    borderWidth: 4,
-    borderColor: "rgba(255, 255, 255, 0.3)",
+    width: width * 0.5,
+    height: width * 0.5,
+    borderRadius: (width * 0.5) / 2,
+    borderWidth: 3,
+    borderColor: "rgba(255, 255, 255, 0.4)",
   },
   localVideo: {
     position: "absolute",
@@ -222,5 +253,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     transform: [{ rotate: "135deg" }],
+  },
+  errorPlaceholder: {
+    position: "absolute",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  errorText: {
+    color: "#888",
+    fontSize: 14,
+    marginTop: 10,
   },
 });
