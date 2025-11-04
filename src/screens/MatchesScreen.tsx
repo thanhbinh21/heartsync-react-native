@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,150 +6,145 @@ import {
   StyleSheet,
   FlatList,
   Image,
+  SafeAreaView,
+  StatusBar,
+  Dimensions,
 } from "react-native";
 import { useNavigate } from "react-router-native";
 import { Ionicons } from "@expo/vector-icons";
+import BottomNavigation from "../components/BottomNavigation";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const mockMatches = [
   {
     id: "1",
-    name: "Emma",
+    name: "Emma Wilson",
+    age: 28,
     photo: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300",
     lastMessage: "Hey! How's your day going?",
-    timeAgo: "2h",
+    timeAgo: "2h ago",
     isOnline: true,
-    hasNewMessage: true,
+    unreadCount: 2,
   },
   {
     id: "2",
-    name: "Sarah",
+    name: "Sarah Johnson",
+    age: 25,
     photo: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300",
-    timeAgo: "1d",
+    lastMessage: "That sounds great! 😊",
+    timeAgo: "1d ago",
     isOnline: false,
-    hasNewMessage: false,
+    unreadCount: 0,
   },
   {
     id: "3",
-    name: "Jessica",
+    name: "Jessica Brown",
+    age: 27,
     photo: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300",
-    lastMessage: "Thanks for the recommendation! 😊",
-    timeAgo: "3d",
+    lastMessage: "Thanks for the recommendation!",
+    timeAgo: "3d ago",
+    isOnline: true,
+    unreadCount: 1,
+  },
+  {
+    id: "4",
+    name: "Rachel Miller",
+    age: 26,
+    photo: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=300",
+    lastMessage: "See you soon! 💕",
+    timeAgo: "5d ago",
     isOnline: false,
-    hasNewMessage: true,
+    unreadCount: 0,
   },
 ];
 
 export default function MatchesScreen() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<"matches" | "messages">("matches");
-  
-  const newMatches = mockMatches.filter((m) => !m.lastMessage);
-  const messages = mockMatches.filter((m) => m.lastMessage);
+  const [activeTab, setActiveTab] = useState<"matches" | "likes">("matches");
 
-  const renderNewMatch = ({ item }: any) => (
+  const renderMatchItem = ({ item }: any) => (
     <TouchableOpacity 
-      style={styles.matchCard}
-      onPress={() => navigate("/profile-view", { state: { user: item } })}
+      style={styles.matchItem}
+      onPress={() => navigate(`/chat/${item.id}`, { state: { user: item } })}
     >
-      <Image source={{ uri: item.photo }} style={styles.matchPhoto} />
-      {item.isOnline && <View style={styles.onlineDot} />}
-      <Text style={styles.matchName}>{item.name}</Text>
-      <Text style={styles.matchTime}>{item.timeAgo}</Text>
-    </TouchableOpacity>
-  );
-
-  const renderMessage = ({ item }: any) => (
-    <TouchableOpacity 
-      style={styles.messageRow}
-      onPress={() => navigate("/chat", { state: { matchId: item.id, user: item } })}
-    >
-      <View style={styles.messageAvatarContainer}>
-        <Image source={{ uri: item.photo }} style={styles.messageAvatar} />
-        {item.isOnline && <View style={styles.onlineDotSmall} />}
+      <View style={styles.matchAvatarContainer}>
+        <Image source={{ uri: item.photo }} style={styles.matchAvatar} />
+        {item.isOnline && <View style={styles.onlineIndicator} />}
+        {item.unreadCount > 0 && (
+          <View style={styles.unreadBadge}>
+            <Text style={styles.unreadCount}>{item.unreadCount}</Text>
+          </View>
+        )}
       </View>
       
-      <View style={styles.messageContent}>
-        <View style={styles.messageHeader}>
-          <Text style={styles.messageName}>{item.name}</Text>
-          <Text style={styles.messageTime}>{item.timeAgo}</Text>
+      <View style={styles.matchInfo}>
+        <View style={styles.matchHeader}>
+          <Text style={styles.matchName}>{item.name}</Text>
+          <Text style={styles.matchTime}>{item.timeAgo}</Text>
         </View>
-        <Text
+        <Text 
           style={[
-            styles.messageText,
-            item.hasNewMessage && styles.unreadMessage,
+            styles.matchMessage,
+            item.unreadCount > 0 && styles.matchMessageUnread
           ]}
           numberOfLines={1}
         >
           {item.lastMessage}
         </Text>
       </View>
-      {item.hasNewMessage && <View style={styles.unreadDot} />}
     </TouchableOpacity>
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
+      
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigate(-1)}>
-          <Ionicons name="chevron-back" size={28} color="#000" />
+        <TouchableOpacity style={styles.headerButton}>
+          <Ionicons name="menu" size={28} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Matches</Text>
-        <TouchableOpacity>
-          <Ionicons name="filter" size={24} color="#888" />
+        <TouchableOpacity style={styles.headerButton} onPress={() => navigate(-1)}>
+          <Ionicons name="arrow-back" size={28} color="#333" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>HeartSync</Text>
+        <TouchableOpacity style={styles.headerButton}>
+          <Ionicons name="options" size={24} color="#333" />
         </TouchableOpacity>
       </View>
 
       {/* Tabs */}
       <View style={styles.tabsContainer}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === "matches" && styles.activeTab]}
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === "matches" && styles.tabActive]}
           onPress={() => setActiveTab("matches")}
         >
-          <Text style={[styles.tabText, activeTab === "matches" && styles.activeTabText]}>
-            New Matches ({newMatches.length})
+          <Text style={[styles.tabText, activeTab === "matches" && styles.tabTextActive]}>
+            Matches
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === "messages" && styles.activeTab]}
-          onPress={() => setActiveTab("messages")}
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === "likes" && styles.tabActive]}
+          onPress={() => setActiveTab("likes")}
         >
-          <Text style={[styles.tabText, activeTab === "messages" && styles.activeTabText]}>
-            Messages ({messages.length})
+          <Text style={[styles.tabText, activeTab === "likes" && styles.tabTextActive]}>
+            Likes
           </Text>
         </TouchableOpacity>
       </View>
 
-      {/* Content */}
-      {activeTab === "matches" ? (
-        newMatches.length > 0 ? (
-          <FlatList
-            key="matches-grid"
-            data={newMatches}
-            renderItem={renderNewMatch}
-            keyExtractor={(item) => item.id}
-            numColumns={2}
-            contentContainerStyle={styles.matchesGrid}
-          />
-        ) : (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyIcon}>💕</Text>
-            <Text style={styles.emptyTitle}>No new matches yet</Text>
-            <Text style={styles.emptyText}>
-              Keep swiping to find more people!
-            </Text>
-          </View>
-        )
-      ) : (
-        <FlatList
-          key="messages-list"
-          data={messages}
-          renderItem={renderMessage}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.messagesList}
-        />
-      )}
-    </View>
+      {/* Matches List */}
+      <FlatList
+        data={mockMatches}
+        renderItem={renderMatchItem}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.matchesList}
+        showsVerticalScrollIndicator={false}
+      />
+
+      <BottomNavigation activeRoute="/matches" />
+    </SafeAreaView>
   );
 }
 
@@ -163,92 +158,65 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 20,
-    paddingTop: 50,
-    paddingBottom: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    paddingTop: 10,
+    paddingBottom: 10,
+    backgroundColor: "#fff",
+  },
+  headerButton: {
+    padding: 8,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#000",
+    color: "#333",
+    flex: 1,
+    textAlign: "center",
   },
   tabsContainer: {
     flexDirection: "row",
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    borderBottomColor: "#E0E0E0",
+    backgroundColor: "#fff",
   },
   tab: {
     flex: 1,
-    paddingVertical: 15,
+    paddingVertical: 16,
     alignItems: "center",
-  },
-  activeTab: {
     borderBottomWidth: 3,
-    borderBottomColor: "#9D4EDD",
+    borderBottomColor: "transparent",
+  },
+  tabActive: {
+    borderBottomColor: "#4ECDC4",
   },
   tabText: {
-    fontSize: 15,
-    fontWeight: "500",
-    color: "#888",
-  },
-  activeTabText: {
-    color: "#9D4EDD",
-    fontWeight: "600",
-  },
-  matchesGrid: {
-    padding: 15,
-  },
-  matchCard: {
-    flex: 1,
-    margin: 5,
-    alignItems: "center",
-  },
-  matchPhoto: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    marginBottom: 8,
-  },
-  onlineDot: {
-    position: "absolute",
-    top: 10,
-    right: 20,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: "#4CAF50",
-    borderWidth: 2,
-    borderColor: "#fff",
-  },
-  matchName: {
     fontSize: 16,
-    fontWeight: "600",
-    color: "#000",
+    fontWeight: "500",
+    color: "#999",
   },
-  matchTime: {
-    fontSize: 13,
-    color: "#888",
+  tabTextActive: {
+    color: "#4ECDC4",
+    fontWeight: "700",
   },
-  messagesList: {
-    padding: 0,
+  matchesList: {
+    paddingBottom: 100,
   },
-  messageRow: {
+  matchItem: {
     flexDirection: "row",
-    padding: 15,
+    padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    borderBottomColor: "#F0F0F0",
     alignItems: "center",
   },
-  messageAvatarContainer: {
+  matchAvatarContainer: {
     position: "relative",
+    marginRight: 12,
   },
-  messageAvatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+  matchAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
   },
-  onlineDotSmall: {
+  onlineIndicator: {
     position: "absolute",
     bottom: 2,
     right: 2,
@@ -259,57 +227,48 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#fff",
   },
-  messageContent: {
-    flex: 1,
-    marginLeft: 15,
+  unreadBadge: {
+    position: "absolute",
+    top: -4,
+    right: -4,
+    backgroundColor: "#FF6B9D",
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "#fff",
   },
-  messageHeader: {
+  unreadCount: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#fff",
+  },
+  matchInfo: {
+    flex: 1,
+  },
+  matchHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 4,
   },
-  messageName: {
+  matchName: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#000",
+    color: "#333",
   },
-  messageTime: {
+  matchTime: {
     fontSize: 13,
-    color: "#888",
+    color: "#999",
   },
-  messageText: {
+  matchMessage: {
     fontSize: 14,
-    color: "#666",
+    color: "#999",
   },
-  unreadMessage: {
+  matchMessageUnread: {
     fontWeight: "600",
-    color: "#000",
-  },
-  unreadDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: "#FF4458",
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 40,
-  },
-  emptyIcon: {
-    fontSize: 60,
-    marginBottom: 15,
-  },
-  emptyTitle: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#000",
-    marginBottom: 8,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: "#666",
-    textAlign: "center",
+    color: "#333",
   },
 });

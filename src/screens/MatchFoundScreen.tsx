@@ -65,13 +65,17 @@ export default function MatchFoundScreen() {
   }, []);
 
   const handleClose = () => {
-    navigate('/swipe');
+    navigate('/matches'); // Navigate to matches list instead of swipe
   };
 
   const handleSendMessage = () => {
     navigate(`/chat/${matchedUser?.id || 'unknown'}`, { 
       state: { user: matchedUser } 
     });
+  };
+
+  const handleKeepSwiping = () => {
+    navigate('/swipe');
   };
 
   // Generate confetti positions
@@ -180,11 +184,17 @@ export default function MatchFoundScreen() {
             style={styles.messageInput}
             placeholder="Type a message..."
             placeholderTextColor="#999"
+            onSubmitEditing={handleSendMessage}
           />
           <TouchableOpacity style={styles.sendButton} onPress={handleSendMessage}>
             <Ionicons name="send" size={20} color="#4ECDC4" />
           </TouchableOpacity>
         </View>
+
+        {/* Keep Swiping Link */}
+        <TouchableOpacity onPress={handleKeepSwiping} style={styles.keepSwipingLink}>
+          <Text style={styles.keepSwipingText}>Keep Swiping</Text>
+        </TouchableOpacity>
       </Animated.View>
     </SafeAreaView>
   );
@@ -329,5 +339,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#E8F8F5",
     alignItems: "center",
     justifyContent: "center",
+  },
+  keepSwipingLink: {
+    paddingVertical: 16,
+    alignItems: "center",
+  },
+  keepSwipingText: {
+    fontSize: 16,
+    color: "#999",
+    fontWeight: "600",
   },
 });

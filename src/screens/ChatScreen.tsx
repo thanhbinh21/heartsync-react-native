@@ -9,6 +9,8 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
+  SafeAreaView,
+  StatusBar,
 } from "react-native";
 import { useNavigate, useLocation, useParams } from "react-router-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -40,6 +42,12 @@ const mockMessages = [
     timestamp: new Date(Date.now() - 3300000),
     isMyMessage: true,
   },
+  {
+    id: "5",
+    text: "I'm really into hiking and outdoor adventures!",
+    timestamp: new Date(Date.now() - 3200000),
+    isMyMessage: false,
+  },
 ];
 
 export default function ChatScreen() {
@@ -47,7 +55,14 @@ export default function ChatScreen() {
   const location = useLocation();
   const { matchId } = useParams<{ matchId: string }>();
   const { user: currentUser } = useAuthContext();
-  const { user: matchedUser } = location.state || {};
+  const { user: matchedUser } = location.state || {
+    user: {
+      id: "1",
+      name: "Emma Wilson",
+      photo: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300",
+      age: 28,
+    },
+  };
   
   const [messages, setMessages] = useState(mockMessages);
   const [inputText, setInputText] = useState("");
@@ -110,65 +125,71 @@ export default function ChatScreen() {
   );
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigate(-1)}>
-          <Ionicons name="chevron-back" size={28} color="#000" />
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          style={styles.userInfo}
-          onPress={() => navigate("/profile-view", { state: { user: matchedUser } })}
-        >
-          <Image source={{ uri: matchedUser?.photo }} style={styles.userAvatar} />
-          <View>
-            <Text style={styles.userName}>{matchedUser?.name}</Text>
-            <Text style={styles.userStatus}>Active now</Text>
-          </View>
-        </TouchableOpacity>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
+      <KeyboardAvoidingView
+        style={styles.keyboardView}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigate(-1)} style={styles.backButton}>
+            <Ionicons name="chevron-back" size={28} color="#333" />
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={styles.userInfo}
+            onPress={() => navigate("/profile-view", { state: { user: matchedUser } })}
+          >
+            <Image source={{ uri: matchedUser?.photo }} style={styles.userAvatar} />
+            <View>
+              <Text style={styles.userName}>{matchedUser?.name}</Text>
+              <Text style={styles.userStatus}>Active now</Text>
+            </View>
+          </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => navigate("/video-call", { state: { user: matchedUser } })}>
-          <Ionicons name="videocam" size={28} color="#9D4EDD" />
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity 
+            style={styles.videoButton}
+            onPress={() => navigate("/video-call", { state: { user: matchedUser } })}
+          >
+            <Ionicons name="videocam" size={28} color="#FF6B9D" />
+          </TouchableOpacity>
+        </View>
 
-      {/* Messages */}
-      <FlatList
-        ref={flatListRef}
-        data={messages}
-        renderItem={renderMessage}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.messagesList}
-      />
-
-      {/* Input */}
-      <View style={styles.inputContainer}>
-        <TouchableOpacity style={styles.attachButton}>
-          <Ionicons name="add-circle-outline" size={28} color="#888" />
-        </TouchableOpacity>
-        
-        <TextInput
-          style={styles.input}
-          value={inputText}
-          onChangeText={setInputText}
-          placeholder="Type a message..."
-          placeholderTextColor="#888"
-          multiline
+        {/* Messages */}
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          renderItem={renderMessage}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.messagesList}
         />
-        
-        <TouchableOpacity
-          style={[styles.sendButton, !inputText.trim() && styles.sendButtonDisabled]}
-          onPress={sendMessage}
-          disabled={!inputText.trim()}
-        >
-          <Ionicons name="send" size={20} color="#fff" />
-        </TouchableOpacity>
-      </View>
-    </KeyboardAvoidingView>
+
+        {/* Input */}
+        <View style={styles.inputContainer}>
+          <TouchableOpacity style={styles.attachButton}>
+            <Ionicons name="add-circle-outline" size={28} color="#888" />
+          </TouchableOpacity>
+          
+          <TextInput
+            style={styles.input}
+            value={inputText}
+            onChangeText={setInputText}
+            placeholder="Type a message..."
+            placeholderTextColor="#888"
+            multiline
+          />
+          
+          <TouchableOpacity
+            style={[styles.sendButton, !inputText.trim() && styles.sendButtonDisabled]}
+            onPress={sendMessage}
+            disabled={!inputText.trim()}
+          >
+            <Ionicons name="send" size={20} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
@@ -177,15 +198,25 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
   },
+  keyboardView: {
+    flex: 1,
+  },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 15,
-    paddingTop: 50,
+    paddingTop: 10,
     paddingBottom: 15,
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
+    backgroundColor: "#fff",
+  },
+  backButton: {
+    padding: 5,
+  },
+  videoButton: {
+    padding: 5,
   },
   userInfo: {
     flex: 1,
@@ -202,7 +233,7 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#000",
+    color: "#333",
   },
   userStatus: {
     fontSize: 13,
@@ -227,7 +258,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   myMessageBubble: {
-    backgroundColor: "#9D4EDD",
+    backgroundColor: "#FF6B9D",
     borderBottomRightRadius: 4,
   },
   otherMessageBubble: {
@@ -275,7 +306,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#9D4EDD",
+    backgroundColor: "#FF6B9D",
     justifyContent: "center",
     alignItems: "center",
     marginLeft: 10,

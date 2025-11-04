@@ -6,6 +6,8 @@ import {
   StyleSheet,
   Image,
   Dimensions,
+  SafeAreaView,
+  StatusBar,
 } from "react-native";
 import { useNavigate, useParams, useLocation } from "react-router-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -16,7 +18,11 @@ export default function VideoCallScreen() {
   const navigate = useNavigate();
   const { matchId } = useParams<{ matchId: string }>();
   const location = useLocation();
-  const user = location.state?.user;
+  const user = location.state?.user || {
+    id: "1",
+    name: "Emma Wilson",
+    photo: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300",
+  };
   
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOff, setIsCameraOff] = useState(false);
@@ -42,6 +48,8 @@ export default function VideoCallScreen() {
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="light-content" />
+      
       {/* Remote Video View */}
       <View style={styles.remoteVideo}>
         <Image
