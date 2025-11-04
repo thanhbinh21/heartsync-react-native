@@ -305,31 +305,30 @@ export default function SwipeScreen() {
       
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.headerButton}>
-          <Ionicons name="menu" size={28} color="#333" />
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.headerButton}
-          onPress={() => {
-            // Test navigation to MatchFoundScreen
-            console.log('🧪 Test: Navigating to MatchFoundScreen');
-            navigate('/match-found', {
-              state: {
-                matchedUser: currentUser,
-                matchId: 'test-match-id',
-              }
-            });
-          }}
-        >
-          <Ionicons name="arrow-back" size={28} color="#333" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>HeartSync</Text>
-        <TouchableOpacity 
-          style={styles.filterButton}
-          onPress={() => navigate("/filters")}
-        >
-          <Ionicons name="options" size={24} color="#333" />
-        </TouchableOpacity>
+        <View style={styles.headerLeft}>
+          <TouchableOpacity 
+            style={styles.headerButton}
+            onPress={() => {
+              console.log('🔄 Reloading users...');
+              loadUsers();
+            }}
+          >
+            <Ionicons name="refresh" size={24} color="#333" />
+          </TouchableOpacity>
+        </View>
+        
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle}>HeartSync</Text>
+        </View>
+        
+        <View style={styles.headerRight}>
+          <TouchableOpacity 
+            style={styles.headerButton}
+            onPress={() => navigate("/filters")}
+          >
+            <Ionicons name="options-outline" size={24} color="#4ECDC4" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Progress Bar */}
@@ -568,24 +567,33 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#F5F5F5",
+  },
+  headerLeft: {
+    width: 50,
+    alignItems: "flex-start",
+  },
+  headerCenter: {
+    flex: 1,
+    alignItems: "center",
+  },
+  headerRight: {
+    width: 50,
+    alignItems: "flex-end",
   },
   headerButton: {
     padding: 8,
+    borderRadius: 8,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: "700",
     color: "#333",
-    flex: 1,
-    textAlign: "center",
-  },
-  filterButton: {
-    padding: 8,
-    backgroundColor: "#E3F2FD",
-    borderRadius: 8,
+    letterSpacing: 0.5,
   },
   progressContainer: {
     flexDirection: "row",
