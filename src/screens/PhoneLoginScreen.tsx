@@ -18,6 +18,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from "../constants/theme";
 import { useAuthContext } from "../context/AuthContext";
+import { API_CONFIG } from "../config/api";
 
 export default function PhoneLoginScreen() {
   const navigate = useNavigate();
@@ -27,20 +28,7 @@ export default function PhoneLoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Debug: Log when component renders
-  console.log("🔍 PhoneLoginScreen rendered successfully!");
-
-  // Debug: Log auth state
-  console.log("🔍 PhoneLoginScreen - Auth state:", { 
-    authLoading, 
-    hasUser: !!user,
-    username: username.length > 0,
-    password: password.length > 0
-  });
-
   const handleLogin = async () => {
-    console.log("🔘 Login button clicked!");
-    
     if (!username.trim() || !password.trim()) {
       Alert.alert("Error", "Please enter both username and password");
       return;
@@ -48,11 +36,9 @@ export default function PhoneLoginScreen() {
 
     try {
       setLoading(true);
-      console.log("🔐 Login attempt:", { username: username.trim() });
 
       // Use AuthContext login which handles token and user storage
       const loginResponse = await authLogin(username.trim(), password.trim());
-      console.log("✅ Login successful");
 
       // Check if profile is complete
       const userProfile = loginResponse.user.profile || {};
@@ -63,10 +49,8 @@ export default function PhoneLoginScreen() {
 
       // Navigate based on profile completion
       if (!hasPhotos) {
-        console.log("📝 Profile incomplete, navigating to create-profile");
         navigate("/create-profile");
       } else {
-        console.log("✅ Profile complete, navigating to swipe");
         navigate("/swipe");
       }
       
@@ -76,57 +60,6 @@ export default function PhoneLoginScreen() {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Test function to verify button works
-  const handleTestClick = () => {
-    console.log("🧪 Test button clicked - buttons are working!");
-    Alert.alert("Test", "Button click detected! Now try the login button.");
-  };
-
-  // Test API connection
-  const handleTestAPI = async () => {
-    try {
-      console.log("🌐 Testing API connection...");
-      Alert.alert("Testing", "Checking API connection...");
-      
-      const response = await fetch('http://192.168.1.31:5000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: 'test',
-          password: 'test'
-        })
-      });
-      
-      const data = await response.text();
-      console.log("🌐 API Test Response:", response.status, data);
-      Alert.alert("API Test", `Status: ${response.status}\nResponse: ${data.substring(0, 100)}`);
-    } catch (error: any) {
-      console.error("🌐 API Test Error:", error);
-      Alert.alert("API Error", error.message);
-    }
-  };
-
-  // Clear all storage for testing
-  const handleClearStorage = async () => {
-    try {
-      console.log("🗑️ Clearing all storage...");
-      await AsyncStorage.clear();
-      Alert.alert("Storage Cleared", "All AsyncStorage data has been cleared. Please restart the app.");
-    } catch (error: any) {
-      console.error("🗑️ Clear storage error:", error);
-      Alert.alert("Clear Error", error.message);
-    }
-  };
-
-  const handleTestLogin = async (testUsername: string, testPassword: string) => {
-    setUsername(testUsername);
-    setPassword(testPassword);
-    // Wait a bit for state to update
-    setTimeout(() => handleLogin(), 100);
   };
 
   return (
@@ -141,20 +74,14 @@ export default function PhoneLoginScreen() {
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backButton}
-            onPress={() => {
-              console.log("🔙 Back button clicked - navigating back");
-              navigate(-1);
-            }}
+            onPress={() => navigate(-1)}
           >
             <Ionicons name="arrow-back" size={24} color={COLORS.text.primary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Sign In</Text>
           <TouchableOpacity
             style={styles.backButton}
-            onPress={() => {
-              console.log("🏠 Home button clicked - navigating to /login");
-              navigate("/login");
-            }}
+            onPress={() => navigate("/login")}
           >
             <Ionicons name="home-outline" size={24} color={COLORS.text.primary} />
           </TouchableOpacity>
@@ -181,7 +108,7 @@ export default function PhoneLoginScreen() {
             {/* Username Input */}
             <View style={styles.inputContainer}>
               <View style={styles.inputIconContainer}>
-                <Ionicons name="person-outline" size={20} color={COLORS.text.secondary} />
+                <Ionicons name="person-outline" size={22} color={COLORS.text.secondary} />
               </View>
               <TextInput
                 style={styles.input}
@@ -198,7 +125,7 @@ export default function PhoneLoginScreen() {
             {/* Password Input */}
             <View style={styles.inputContainer}>
               <View style={styles.inputIconContainer}>
-                <Ionicons name="lock-closed-outline" size={20} color={COLORS.text.secondary} />
+                <Ionicons name="lock-closed-outline" size={22} color={COLORS.text.secondary} />
               </View>
               <TextInput
                 style={styles.input}
@@ -217,7 +144,7 @@ export default function PhoneLoginScreen() {
               >
                 <Ionicons
                   name={showPassword ? "eye-outline" : "eye-off-outline"}
-                  size={20}
+                  size={22}
                   color={COLORS.text.secondary}
                 />
               </TouchableOpacity>
@@ -253,57 +180,13 @@ export default function PhoneLoginScreen() {
               </LinearGradient>
             </TouchableOpacity>
 
-            {/* Debug Test Button */}
-            <TouchableOpacity
-              style={styles.debugButton}
-              onPress={handleTestClick}
+            {/* Forgot Password */}
+            <TouchableOpacity 
+              style={styles.forgotPassword}
+              onPress={() => Alert.alert("Forgot Password", "Password reset feature coming soon!")}
             >
-              <Text style={styles.debugButtonText}>🧪 Test Button Click</Text>
+              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
             </TouchableOpacity>
-
-            {/* API Test Button */}
-            <TouchableOpacity
-              style={[styles.debugButton, {backgroundColor: '#4CAF50'}]}
-              onPress={handleTestAPI}
-            >
-              <Text style={styles.debugButtonText}>🌐 Test API Connection</Text>
-            </TouchableOpacity>
-
-            {/* Clear Storage Button */}
-            <TouchableOpacity
-              style={[styles.debugButton, {backgroundColor: '#FFA500'}]}
-              onPress={handleClearStorage}
-            >
-              <Text style={styles.debugButtonText}>🗑️ Clear Storage</Text>
-            </TouchableOpacity>
-
-            {/* Test Accounts */}
-            <View style={styles.testSection}>
-              <Text style={styles.testTitle}>Quick Test Accounts:</Text>
-              <View style={styles.testButtons}>
-                <TouchableOpacity
-                  style={[styles.testButton, styles.testButtonAdmin]}
-                  onPress={() => handleTestLogin("admin", "admin")}
-                  disabled={loading}
-                >
-                  <Text style={styles.testButtonText}>👑 Admin</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.testButton, styles.testButtonUser]}
-                  onPress={() => handleTestLogin("ava", "password")}
-                  disabled={loading}
-                >
-                  <Text style={styles.testButtonText}>👤 Ava</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.testButton, styles.testButtonUser2]}
-                  onPress={() => handleTestLogin("joshua", "password")}
-                  disabled={loading}
-                >
-                  <Text style={styles.testButtonText}>👤 Joshua</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
 
             {/* Sign Up Link */}
             <View style={styles.signupContainer}>
@@ -453,46 +336,16 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
 
-  // Test Section
-  testSection: {
-    marginBottom: SPACING.xl,
-    padding: SPACING.md,
-    backgroundColor: COLORS.gray[50],
-    borderRadius: RADIUS.lg,
-    borderWidth: 1,
-    borderColor: COLORS.gray[200],
-    borderStyle: "dashed",
-  },
-  testTitle: {
-    fontSize: TYPOGRAPHY.fontSize.sm,
-    fontWeight: TYPOGRAPHY.fontWeight.medium,
-    color: COLORS.text.secondary,
-    marginBottom: SPACING.sm,
-    textAlign: "center",
-  },
-  testButtons: {
-    flexDirection: "row",
-    gap: SPACING.sm,
-  },
-  testButton: {
-    flex: 1,
-    paddingVertical: SPACING.sm,
-    borderRadius: RADIUS.md,
+  // Forgot Password
+  forgotPassword: {
     alignItems: "center",
+    marginTop: SPACING.md,
+    marginBottom: SPACING.lg,
   },
-  testButtonAdmin: {
-    backgroundColor: "#4CAF50",
-  },
-  testButtonUser: {
-    backgroundColor: "#2196F3",
-  },
-  testButtonUser2: {
-    backgroundColor: "#FF9800",
-  },
-  testButtonText: {
-    fontSize: TYPOGRAPHY.fontSize.sm,
+  forgotPasswordText: {
+    fontSize: TYPOGRAPHY.fontSize.base,
+    color: COLORS.primary,
     fontWeight: TYPOGRAPHY.fontWeight.medium,
-    color: COLORS.white,
   },
 
   // Sign Up
@@ -528,20 +381,6 @@ const styles = StyleSheet.create({
     marginTop: SPACING.md,
     fontSize: TYPOGRAPHY.fontSize.base,
     color: COLORS.text.secondary,
-    fontWeight: TYPOGRAPHY.fontWeight.medium,
-  },
-
-  // Debug styles
-  debugButton: {
-    marginVertical: SPACING.md,
-    paddingVertical: SPACING.sm,
-    backgroundColor: '#FF6B6B',
-    borderRadius: RADIUS.md,
-    alignItems: 'center',
-  },
-  debugButtonText: {
-    color: COLORS.white,
-    fontSize: TYPOGRAPHY.fontSize.sm,
     fontWeight: TYPOGRAPHY.fontWeight.medium,
   },
 });

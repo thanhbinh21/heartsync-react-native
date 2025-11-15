@@ -194,33 +194,17 @@ export default function SwipeScreen() {
     });
 
     try {
-      console.log('📡 Calling matchService.like for user:', pendingLikeUser.id);
-      console.log('👤 Pending like user data:', JSON.stringify(pendingLikeUser, null, 2));
       const result = await matchService.like(pendingLikeUser.id);
-      console.log('💕 Like result received:', JSON.stringify(result, null, 2));
       
-      // 🧪 FORCE MATCH FOR TESTING - Remove this in production
-      const isMatch = true; // Force match for testing
-      // const isMatch = result.isMatch; // Use this in production
-      
-      if (isMatch) {
-        console.log('🎉 IT\'S A MATCH! Navigating to MatchFoundScreen...');
-        console.log('📱 Navigation params:', {
-          matchedUser: pendingLikeUser,
-          currentUserPhoto: authUser?.profile?.photos?.[0] || 'https://randomuser.me/api/portraits/men/1.jpg',
-          matchId: result.matchId || 'test-match-id',
-        });
-        
+      if (result.isMatch) {
         // Navigate to MatchFoundScreen
         navigate('/match-found', {
           state: {
             matchedUser: pendingLikeUser,
-            currentUserPhoto: authUser?.profile?.photos?.[0] || 'https://randomuser.me/api/portraits/men/1.jpg',
-            matchId: result.matchId || 'test-match-id',
+            currentUserPhoto: authUser?.profile?.photos?.[0] || 'https://i.pravatar.cc/400?img=50',
+            matchId: result.matchId,
           }
         });
-      } else {
-        console.log('👍 Like sent successfully, but no match yet');
       }
       setPendingLikeUser(null);
     } catch (error) {
@@ -567,11 +551,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
     backgroundColor: "#fff",
     borderBottomWidth: 1,
-    borderBottomColor: "#F5F5F5",
+    borderBottomColor: "#f0f0f0",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
   },
   headerLeft: {
     width: 50,
@@ -614,21 +603,21 @@ const styles = StyleSheet.create({
   cardContainer: {
     flex: 1,
     alignItems: "center",
-    paddingHorizontal: 20,
-    paddingTop: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 20,
     justifyContent: "center",
   },
   card: {
-    width: SCREEN_WIDTH - 40,
+    width: SCREEN_WIDTH - 32,
     height: CARD_HEIGHT,
-    borderRadius: 16,
+    borderRadius: 20,
     overflow: "hidden",
     backgroundColor: "#fff",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 10,
   },
   nextCard: {
     position: "absolute",
@@ -649,56 +638,63 @@ const styles = StyleSheet.create({
   },
   instructionsOverlay: {
     position: "absolute",
-    top: "25%",
+    top: "20%",
     left: 0,
     right: 0,
-    paddingHorizontal: 30,
+    paddingHorizontal: 24,
   },
   rightSwipeInstruction: {
     alignItems: "flex-end",
-    marginBottom: 40,
+    marginBottom: 50,
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignSelf: "flex-end",
   },
   leftSwipeInstruction: {
     alignItems: "flex-start",
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignSelf: "flex-start",
   },
   instructionIcon: {
-    marginBottom: 8,
+    marginBottom: 6,
   },
   instructionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "700",
     color: "#fff",
-    marginBottom: 8,
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    marginBottom: 6,
   },
   instructionSubtitle: {
-    fontSize: 13,
-    color: "#fff",
+    fontSize: 12,
+    color: "#f0f0f0",
     textAlign: "left",
-    lineHeight: 18,
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
+    lineHeight: 16,
   },
   cardInfo: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    padding: 20,
+    padding: 24,
   },
   userName: {
-    fontSize: 28,
-    fontWeight: "700",
+    fontSize: 30,
+    fontWeight: "800",
     color: "#fff",
-    marginBottom: 8,
+    marginBottom: 10,
+    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   userDetails: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 10,
   },
   genderTag: {
     backgroundColor: "rgba(255, 255, 255, 0.2)",
@@ -730,10 +726,15 @@ const styles = StyleSheet.create({
   },
   matchModalContainer: {
     backgroundColor: "#fff",
-    borderRadius: 20,
-    padding: 40,
+    borderRadius: 24,
+    padding: 32,
     alignItems: "center",
     width: SCREEN_WIDTH - 60,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.3,
+    shadowRadius: 24,
+    elevation: 12,
   },
   matchModalContent: {
     alignItems: 'center',
@@ -806,24 +807,24 @@ const styles = StyleSheet.create({
   },
   confirmationModal: {
     backgroundColor: "#fff",
-    borderRadius: 20,
-    padding: 24,
+    borderRadius: 24,
+    padding: 30,
     marginHorizontal: 20,
     width: SCREEN_WIDTH - 60,
     alignItems: "center",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.25,
+    shadowRadius: 24,
+    elevation: 12,
   },
   confirmIconContainer: {
-    marginBottom: 20,
+    marginBottom: 24,
   },
   confirmIconCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
     backgroundColor: "#E8F8F5",
     alignItems: "center",
     justifyContent: "center",

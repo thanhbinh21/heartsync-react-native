@@ -32,8 +32,8 @@ export default function BottomNavigation({ activeRoute }: BottomNavigationProps)
       >
         <Ionicons 
           name={isActive("/subscription") ? "person" : "person-outline"} 
-          size={28} 
-          color={isActive("/subscription") ? "#00BCD4" : "#999"} 
+          size={26} 
+          color={isActive("/subscription") ? "#9D4EDD" : "#999"} 
         />
       </TouchableOpacity>
 
@@ -44,8 +44,8 @@ export default function BottomNavigation({ activeRoute }: BottomNavigationProps)
       >
         <Ionicons 
           name={isActive("/swipe") ? "heart" : "heart-outline"} 
-          size={28} 
-          color={isActive("/swipe") ? "#00BCD4" : "#999"} 
+          size={26} 
+          color={isActive("/swipe") ? "#9D4EDD" : "#999"} 
         />
       </TouchableOpacity>
 
@@ -56,7 +56,7 @@ export default function BottomNavigation({ activeRoute }: BottomNavigationProps)
       >
         <Ionicons 
           name="bookmark-outline"
-          size={28} 
+          size={26} 
           color="#999" 
         />
       </TouchableOpacity>
@@ -68,8 +68,8 @@ export default function BottomNavigation({ activeRoute }: BottomNavigationProps)
       >
         <Ionicons 
           name={isActive("/matches") || isActive("/chat") ? "chatbubble" : "chatbubble-outline"} 
-          size={28} 
-          color={isActive("/matches") || isActive("/chat") ? "#00BCD4" : "#999"} 
+          size={26} 
+          color={isActive("/matches") || isActive("/chat") ? "#9D4EDD" : "#999"} 
         />
         {/* Badge for unread messages */}
         <View style={styles.badge}>
@@ -85,35 +85,38 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
     backgroundColor: "#fff",
     borderTopWidth: 1,
-    borderTopColor: "#E0E0E0",
-    paddingBottom: 20,
+    borderTopColor: "#f0f0f0",
+    paddingBottom: 24,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 8,
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 10,
   },
   navButton: {
-    padding: 12,
+    padding: 10,
     position: "relative",
     alignItems: "center",
     justifyContent: "center",
+    minWidth: 50,
   },
   badge: {
     position: "absolute",
-    top: 8,
-    right: 8,
-    backgroundColor: "#FF3B30",
+    top: 6,
+    right: 6,
+    backgroundColor: "#FF6B9D",
     borderRadius: 10,
-    minWidth: 20,
-    height: 20,
+    minWidth: 18,
+    height: 18,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 6,
+    paddingHorizontal: 5,
+    borderWidth: 2,
+    borderColor: "#fff",
   },
   badgeText: {
     color: "#fff",

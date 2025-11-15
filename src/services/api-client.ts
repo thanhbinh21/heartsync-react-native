@@ -9,6 +9,8 @@ export class ApiClient {
 
   constructor() {
     this.baseURL = API_CONFIG.BASE_URL;
+    console.log('🌐 ApiClient initialized with baseURL:', this.baseURL);
+
   }
 
   /**

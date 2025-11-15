@@ -21,7 +21,7 @@ export default function VideoCallScreen() {
   const user = location.state?.user || {
     id: "1",
     name: "Emma Wilson",
-    photo: "https://randomuser.me/api/portraits/women/1.jpg",
+    photo: "https://i.pravatar.cc/400?img=1",
   };
   
   const [isMuted, setIsMuted] = useState(false);

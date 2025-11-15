@@ -98,18 +98,7 @@ export default function LoginScreen() {
             </Text>
           </TouchableOpacity>
 
-          {/* Debug Navigation Button */}
-          <TouchableOpacity 
-            style={[styles.button, { backgroundColor: '#FF6B6B', marginTop: 10 }]} 
-            onPress={() => {
-              console.log("🧪 Debug: Testing navigation to /phone-login");
-              navigate("/phone-login");
-            }}
-          >
-            <Text style={[styles.buttonText, { color: '#fff' }]}>
-              🧪 Debug: Go to Phone Login
-            </Text>
-          </TouchableOpacity>
+
         </View>
 
         {/* Footer Section */}
@@ -125,7 +114,7 @@ export default function LoginScreen() {
         </View>
 
         {/* Bottom Indicator */}
-        <View style={styles.bottomIndicator} />
+        
       </View>
     </SafeAreaView>
   );
@@ -140,15 +129,14 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: SPACING.lg,
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    paddingVertical: SPACING.md,
+    justifyContent: 'space-evenly',
   },
   
   // Logo Section
   logoSection: {
     alignItems: 'center',
-    marginTop: SPACING['3xl'],
-    flex: 1,
+    flex: 2,
     justifyContent: 'center',
   },
   logoContainer: {
@@ -179,17 +167,18 @@ const styles = StyleSheet.create({
   buttonsSection: {
     width: '100%',
     gap: SPACING.md,
-    marginBottom: SPACING.xl,
+    flex: 1,
+    justifyContent: 'center',
   },
   button: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: SPACING.md,
+    paddingVertical: SPACING.md + 2,
     paddingHorizontal: SPACING.lg,
     borderRadius: RADIUS.xl,
-    minHeight: 56,
-    ...SHADOWS.sm,
+    height: 56,
+    ...SHADOWS.md,
   },
   buttonIcon: {
     marginRight: SPACING.sm,
@@ -226,26 +215,20 @@ const styles = StyleSheet.create({
   // Footer Section
   footerSection: {
     alignItems: 'center',
-    marginBottom: SPACING.lg,
+    paddingBottom: SPACING.sm,
   },
   footerText: {
-    fontSize: TYPOGRAPHY.fontSize.sm,
+    fontSize: TYPOGRAPHY.fontSize.xs,
     color: COLORS.text.tertiary,
     textAlign: 'center',
-    marginBottom: SPACING.xs,
-    lineHeight: TYPOGRAPHY.lineHeight.normal * TYPOGRAPHY.fontSize.sm,
+    marginVertical: SPACING.xs / 2,
+    lineHeight: TYPOGRAPHY.lineHeight.relaxed * TYPOGRAPHY.fontSize.xs,
+    paddingHorizontal: SPACING.sm,
   },
   linkText: {
     color: COLORS.primary,
     textDecorationLine: 'underline',
   },
 
-  // Bottom Indicator
-  bottomIndicator: {
-    width: 140,
-    height: 4,
-    backgroundColor: COLORS.text.primary,
-    borderRadius: RADIUS.sm,
-    marginBottom: SPACING.sm,
-  },
+
 });

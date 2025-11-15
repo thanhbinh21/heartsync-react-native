@@ -33,12 +33,12 @@ export default function MatchFoundScreen() {
   // Mock data if none provided
   const user = matchedUser || {
     name: "Emma Wilson",
-    photo: "https://randomuser.me/api/portraits/women/1.jpg",
+    photo: "https://i.pravatar.cc/400?img=1",
   };
 
   // Get photo from matchedUser (support both 'photo' and 'photos' fields)
-  const matchedUserPhoto = user.photos?.[0] || user.photo || "https://randomuser.me/api/portraits/women/1.jpg";
-  const myPhoto = currentUserPhoto || "https://randomuser.me/api/portraits/men/1.jpg";
+  const matchedUserPhoto = user.photos?.[0] || user.photo || "https://i.pravatar.cc/400?img=1";
+  const myPhoto = currentUserPhoto || "https://i.pravatar.cc/400?img=50";
 
   console.log('📸 Left photo (myPhoto):', myPhoto);
   console.log('📸 Right photo (matchedUserPhoto):', matchedUserPhoto);
@@ -102,11 +102,11 @@ export default function MatchFoundScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
-          <Ionicons name="close" size={28} color="#333" />
+          <Ionicons name="close" size={30} color="#333" />
         </TouchableOpacity>
         
         <TouchableOpacity style={styles.moreButton}>
-          <Ionicons name="ellipsis-vertical" size={24} color="#333" />
+          <Ionicons name="ellipsis-vertical" size={26} color="#333" />
         </TouchableOpacity>
       </View>
 

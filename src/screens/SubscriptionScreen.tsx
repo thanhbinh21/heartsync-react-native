@@ -85,10 +85,10 @@ export default function SubscriptionScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.menuButton}>
-          <Ionicons name="menu" size={28} color="#333" />
+          <Ionicons name="menu" size={26} color="#333" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.settingsButton}>
-          <Ionicons name="settings-outline" size={28} color="#333" />
+          <Ionicons name="settings-outline" size={26} color="#333" />
         </TouchableOpacity>
       </View>
 
