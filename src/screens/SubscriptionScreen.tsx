@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import BottomNavigation from "../components/BottomNavigation";
+import { getRandomPhoto } from "../utils/photo-utils";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -100,7 +101,7 @@ export default function SubscriptionScreen() {
         <View style={styles.profileSection}>
           <View style={styles.profileImageContainer}>
             <Image
-              source={{ uri: 'https://i.pravatar.cc/300?img=12' }}
+              source={{ uri: getRandomPhoto() }}
               style={styles.profileImage}
             />
             <View style={styles.profileRing} />
@@ -116,7 +117,7 @@ export default function SubscriptionScreen() {
           
           <TouchableOpacity 
             style={styles.editProfileButton}
-            onPress={() => navigate("/create-profile")}
+            onPress={() => navigate("/create-profile", { state: { returnTo: '/subscription' } })}
           >
             <Text style={styles.editProfileText}>Edit your profile</Text>
             <Ionicons name="chevron-forward" size={16} color="#00BCD4" />

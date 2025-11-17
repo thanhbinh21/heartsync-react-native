@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { useNavigate, useLocation } from "react-router-native";
 import { Ionicons } from "@expo/vector-icons";
+import { getRandomPhoto } from "../utils/photo-utils";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -33,12 +34,12 @@ export default function MatchFoundScreen() {
   // Mock data if none provided
   const user = matchedUser || {
     name: "Emma Wilson",
-    photo: "https://i.pravatar.cc/400?img=1",
+    photo: getRandomPhoto(),
   };
 
   // Get photo from matchedUser (support both 'photo' and 'photos' fields)
-  const matchedUserPhoto = user.photos?.[0] || user.photo || "https://i.pravatar.cc/400?img=1";
-  const myPhoto = currentUserPhoto || "https://i.pravatar.cc/400?img=50";
+  const matchedUserPhoto = user.photos?.[0] || user.photo || getRandomPhoto();
+  const myPhoto = currentUserPhoto || getRandomPhoto();
 
   console.log('📸 Left photo (myPhoto):', myPhoto);
   console.log('📸 Right photo (matchedUserPhoto):', matchedUserPhoto);

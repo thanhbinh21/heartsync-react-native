@@ -11,11 +11,13 @@ import SwipeScreen from '../screens/SwipeScreen';
 import SwipeConfirmationScreen from '../screens/SwipeConfirmationScreen';
 import MatchFoundScreen from '../screens/MatchFoundScreen';
 import ProfileViewScreen from '../screens/ProfileViewScreen';
+import UserDetailScreen from '../screens/UserDetailScreen';
 import MatchesScreen from '../screens/MatchesScreen';
 import ChatScreen from '../screens/ChatScreen';
 import VideoCallScreen from '../screens/VideoCallScreen';
 import FiltersScreen from '../screens/FiltersScreen';
 import SubscriptionScreen from '../screens/SubscriptionScreen';
+import BookmarkScreen from '../screens/BookmarkScreen';
 
 // Protected Route wrapper
 const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
@@ -116,6 +118,22 @@ export default function AppRouter() {
           } 
         />
         <Route 
+          path="/user-detail/:userId" 
+          element={
+            <ProtectedRoute>
+              <UserDetailScreen />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/user-detail" 
+          element={
+            <ProtectedRoute>
+              <UserDetailScreen />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
           path="/matches" 
           element={
             <ProtectedRoute>
@@ -152,6 +170,14 @@ export default function AppRouter() {
           element={
             <ProtectedRoute>
               <SubscriptionScreen />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/bookmark" 
+          element={
+            <ProtectedRoute>
+              <BookmarkScreen />
             </ProtectedRoute>
           } 
         />

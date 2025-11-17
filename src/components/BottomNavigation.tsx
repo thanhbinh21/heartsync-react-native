@@ -31,9 +31,9 @@ export default function BottomNavigation({ activeRoute }: BottomNavigationProps)
         onPress={() => navigate("/subscription")}
       >
         <Ionicons 
-          name={isActive("/subscription") ? "person" : "person-outline"} 
+          name={isActive("/user-detail") ? "person" : "person-outline"} 
           size={26} 
-          color={isActive("/subscription") ? "#9D4EDD" : "#999"} 
+          color={isActive("/user-detail") ? "#9D4EDD" : "#999"} 
         />
       </TouchableOpacity>
 
@@ -52,12 +52,12 @@ export default function BottomNavigation({ activeRoute }: BottomNavigationProps)
       {/* Saved Tab */}
       <TouchableOpacity 
         style={styles.navButton}
-        onPress={() => navigate("/matches")}
+        onPress={() => navigate("/bookmark")}
       >
         <Ionicons 
-          name="bookmark-outline"
+          name={isActive("/bookmark") ? "bookmark" : "bookmark-outline"}
           size={26} 
-          color="#999" 
+          color={isActive("/bookmark") ? "#9D4EDD" : "#999"} 
         />
       </TouchableOpacity>
 

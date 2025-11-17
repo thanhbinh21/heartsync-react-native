@@ -13,6 +13,7 @@ import {
 import { useNavigate } from "react-router-native";
 import { Ionicons } from "@expo/vector-icons";
 import BottomNavigation from "../components/BottomNavigation";
+import { getPhotoByIndex } from "../utils/photo-utils";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -21,7 +22,7 @@ const mockMatches = [
     id: "1",
     name: "Emma Wilson",
     age: 28,
-    photo: "https://i.pravatar.cc/400?img=1",
+    photo: getPhotoByIndex(0),
     lastMessage: "Hey! How's your day going?",
     timeAgo: "2h ago",
     isOnline: true,
@@ -31,7 +32,7 @@ const mockMatches = [
     id: "2",
     name: "Sarah Johnson",
     age: 25,
-    photo: "https://i.pravatar.cc/400?img=5",
+    photo: getPhotoByIndex(1),
     lastMessage: "That sounds great! 😊",
     timeAgo: "1d ago",
     isOnline: false,
@@ -41,7 +42,7 @@ const mockMatches = [
     id: "3",
     name: "Jessica Brown",
     age: 27,
-    photo: "https://i.pravatar.cc/400?img=9",
+    photo: getPhotoByIndex(2),
     lastMessage: "Thanks for the recommendation!",
     timeAgo: "3d ago",
     isOnline: true,
@@ -51,7 +52,7 @@ const mockMatches = [
     id: "4",
     name: "Rachel Miller",
     age: 26,
-    photo: "https://i.pravatar.cc/400?img=16",
+    photo: getPhotoByIndex(3),
     lastMessage: "See you soon! 💕",
     timeAgo: "5d ago",
     isOnline: false,

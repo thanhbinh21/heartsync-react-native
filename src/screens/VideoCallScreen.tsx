@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { useNavigate, useParams, useLocation } from "react-router-native";
 import { Ionicons } from "@expo/vector-icons";
+import { getRandomPhoto } from "../utils/photo-utils";
 
 const { width, height } = Dimensions.get("window");
 
@@ -21,7 +22,7 @@ export default function VideoCallScreen() {
   const user = location.state?.user || {
     id: "1",
     name: "Emma Wilson",
-    photo: "https://i.pravatar.cc/400?img=1",
+    photo: getRandomPhoto(),
   };
   
   const [isMuted, setIsMuted] = useState(false);

@@ -27,13 +27,11 @@ import { getRandomPhoto } from "../utils/photo-utils";
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const CARD_HEIGHT = SCREEN_HEIGHT * 0.7;
 
-export default function SwipeScreen() {
+export default function BookmarkScreen() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user: authUser } = useAuthContext();
-  const [allUsers, setAllUsers] = useState<DiscoverUser[]>([]); // Tất cả users
-  const [likedUsers, setLikedUsers] = useState<DiscoverUser[]>([]); // Users đã like
-  const [showBookmarked, setShowBookmarked] = useState(false); // Toggle bookmark view
+  const [allUsers, setAllUsers] = useState<DiscoverUser[]>([]); 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showMatchModal, setShowMatchModal] = useState(false);
@@ -45,48 +43,34 @@ export default function SwipeScreen() {
   const modalScale = useRef(new Animated.Value(0.8)).current;
   const modalFade = useRef(new Animated.Value(0)).current;
 
-  // Users hiển thị (toggle giữa all và liked)
-  const users = showBookmarked ? likedUsers : allUsers;
+  const users = allUsers;
 
   useEffect(() => {
     loadUsers();
   }, []);
 
-  // Toggle bookmark view khi click bookmark
-  useEffect(() => {
-    if (location.state?.refresh) {
-      console.log('🔖 Bookmark clicked - Toggling view...');
-      setShowBookmarked(!showBookmarked);
-      setCurrentIndex(0);
-      pan.setValue({ x: 0, y: 0 });
-      rotate.setValue(0);
-    }
-  }, [location.state?.refresh]);
-
   const loadUsers = async () => {
     try {
       setLoading(true);
-      console.log('🔄 Loading discover users...');
+      console.log('🔄 Loading bookmarked users...');
       const discoverUsers = await matchService.getDiscoverUsers();
-      console.log('✅ Got users:', discoverUsers.length);
-      console.log('📋 Users data:', discoverUsers);
       
-      // Reset currentIndex về 0 để hiển thị user đầu tiên
+      // Lấy users từ index 2 đến 7 (5 users)
+      const bookmarkedUsers = discoverUsers.slice(2, 7);
+      console.log('✅ Got bookmarked users:', bookmarkedUsers.length);
+      console.log('📋 Users data:', bookmarkedUsers);
+      
       setCurrentIndex(0);
-      setAllUsers(discoverUsers);
+      setAllUsers(bookmarkedUsers);
       
-      if (discoverUsers.length === 0) {
-        console.warn('⚠️ No users returned from backend');
+      if (bookmarkedUsers.length === 0) {
+        console.warn('⚠️ No bookmarked users');
         Alert.alert(
-          "No Users Available", 
-          "There are currently no users to show. This could mean:\n\n" +
-          "1. You've already swiped on all available users\n" +
-          "2. No other users match your preferences\n" +
-          "3. Backend database needs more users\n\n" +
-          "Try adjusting your preferences or check back later!",
+          "No Bookmarked Users", 
+          "You don't have any bookmarked users yet. Start swiping to save your favorites!",
           [
             { text: "OK" },
-            { text: "Reload", onPress: () => loadUsers() }
+            { text: "Go to Swipe", onPress: () => navigate("/swipe") }
           ]
         );
       }
@@ -147,13 +131,10 @@ export default function SwipeScreen() {
       duration: 300,
       useNativeDriver: false,
     }).start(() => {
-      // Lưu vào liked users
-      setLikedUsers(prev => [...prev, currentUser]);
       console.log('👍 Swiped right on:', currentUser.name);
       setPendingLikeUser(currentUser);
       setShowConfirmationModal(true);
       
-      // Animate modal in
       Animated.parallel([
         Animated.spring(modalScale, {
           toValue: 1,
@@ -199,7 +180,6 @@ export default function SwipeScreen() {
     
     console.log('✅ User confirmed like, processing...', pendingLikeUser.name);
     
-    // Close confirmation modal first
     Animated.parallel([
       Animated.timing(modalScale, {
         toValue: 0.8,
@@ -219,7 +199,6 @@ export default function SwipeScreen() {
       const result = await matchService.like(pendingLikeUser.id);
       
       if (result.isMatch) {
-        // Navigate to MatchFoundScreen
         navigate('/match-found', {
           state: {
             matchedUser: pendingLikeUser,
@@ -270,7 +249,6 @@ export default function SwipeScreen() {
     rotate.setValue(0);
     setCurrentIndex((prev) => prev + 1);
     
-    // Load more users if running low
     if (currentIndex >= users.length - 3) {
       loadUsers();
     }
@@ -296,7 +274,7 @@ export default function SwipeScreen() {
       <SafeAreaView style={styles.container}>
         <View style={[styles.container, styles.centerContent]}>
           <Ionicons name="heart-dislike" size={80} color="#ccc" />
-          <Text style={styles.noMoreText}>No more users to show</Text>
+          <Text style={styles.noMoreText}>No more bookmarked users</Text>
           <TouchableOpacity style={styles.reloadButton} onPress={loadUsers}>
             <Text style={styles.reloadText}>Reload</Text>
           </TouchableOpacity>
@@ -315,16 +293,8 @@ export default function SwipeScreen() {
           <TouchableOpacity 
             style={styles.headerButton}
             onPress={() => {
-              if (showBookmarked) {
-                // Quay lại discover mode
-                setShowBookmarked(false);
-                setCurrentIndex(0);
-                pan.setValue({ x: 0, y: 0 });
-                rotate.setValue(0);
-              } else {
-                console.log('🔄 Reloading users...');
-                loadUsers();
-              }
+              console.log('🔄 Reloading users...');
+              loadUsers();
             }}
           >
             <Ionicons name="refresh" size={24} color="#333" />
@@ -332,22 +302,15 @@ export default function SwipeScreen() {
         </View>
         
         <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>
-            {showBookmarked ? '💜 Bookmarked' : 'HeartSync'}
-          </Text>
-          {showBookmarked && (
-            <Text style={styles.headerSubtitle}>
-              {likedUsers.length} người đã thích
-            </Text>
-          )}
+          <Text style={styles.headerTitle}>💜 Bookmarked</Text>
         </View>
         
         <View style={styles.headerRight}>
           <TouchableOpacity 
             style={styles.headerButton}
-            onPress={() => navigate("/filters")}
+            onPress={() => navigate("/swipe")}
           >
-            <Ionicons name="options-outline" size={24} color="#4ECDC4" />
+            <Ionicons name="arrow-back" size={24} color="#4ECDC4" />
           </TouchableOpacity>
         </View>
       </View>
@@ -394,30 +357,28 @@ export default function SwipeScreen() {
             style={styles.gradientOverlay}
           />
 
-          {/* Swipe Instructions Overlay - Only show for first user */}
-          {currentIndex === 0 && (
-            <View style={styles.instructionsOverlay}>
-              {/* Right Swipe */}
-              <View style={styles.rightSwipeInstruction}>
-                <Ionicons name="arrow-forward" size={24} color="#fff" style={styles.instructionIcon} />
-                <Text style={styles.instructionTitle}>Swipe right if you like</Text>
-                <Text style={styles.instructionSubtitle}>
-                  If the person also swipes right on you,{'\n'}
-                  it's a match and you can connect.
-                </Text>
-              </View>
-
-              {/* Left Swipe */}
-              <View style={styles.leftSwipeInstruction}>
-                <Ionicons name="arrow-back" size={24} color="#fff" style={styles.instructionIcon} />
-                <Text style={styles.instructionTitle}>Swipe left to pass</Text>
-                <Text style={styles.instructionSubtitle}>
-                  If the person is not your cup of tea,{'\n'}
-                  simply pass. It's that easy!
-                </Text>
-              </View>
+          {/* Swipe Instructions Overlay */}
+          <View style={styles.instructionsOverlay}>
+            {/* Right Swipe */}
+            <View style={styles.rightSwipeInstruction}>
+              <Ionicons name="arrow-forward" size={24} color="#fff" style={styles.instructionIcon} />
+              <Text style={styles.instructionTitle}>Swipe right if you like</Text>
+              <Text style={styles.instructionSubtitle}>
+                If the person also swipes right on you,{'\n'}
+                it's a match and you can connect.
+              </Text>
             </View>
-          )}
+
+            {/* Left Swipe */}
+            <View style={styles.leftSwipeInstruction}>
+              <Ionicons name="arrow-back" size={24} color="#fff" style={styles.instructionIcon} />
+              <Text style={styles.instructionTitle}>Swipe left to pass</Text>
+              <Text style={styles.instructionSubtitle}>
+                If the person is not your cup of tea,{'\n'}
+                simply pass. It's that easy!
+              </Text>
+            </View>
+          </View>
 
           {/* User Info at Bottom */}
           <View style={styles.cardInfo}>
@@ -455,7 +416,7 @@ export default function SwipeScreen() {
       </View>
 
       {/* Bottom Navigation */}
-      <BottomNavigation activeRoute="/swipe" />
+      <BottomNavigation activeRoute="/bookmark" />
 
       {/* Confirmation Modal (when swipe right) */}
       <Modal

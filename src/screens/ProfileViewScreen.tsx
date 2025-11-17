@@ -49,9 +49,7 @@ export default function ProfileViewScreen() {
         distance: "Your location",
         gender: currentUser.profile.gender,
         job: currentUser.profile.occupation || "Not specified",
-        photos: currentUser.profile.photos || [
-          "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=600",
-        ],
+        photos: currentUser.profile.photos || [getRandomPhoto()],
         about: currentUser.profile.aboutMe || "No bio available",
         myDetails: [
           { icon: "resize-outline", label: currentUser.profile.height || "Not specified", color: "#FF6B9D" },
@@ -77,11 +75,7 @@ export default function ProfileViewScreen() {
       distance: "2.0 kilometers away",
       gender: "she/her/hers",
       job: "Business Analyst at Tech",
-      photos: passedUser?.photos || [
-        "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=600",
-        "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600",
-        "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600",
-      ],
+      photos: passedUser?.photos || getRandomPhotos(3),
       about: "It would be wrong to meet someone who appreciates good arts and enjoys exploring the vibrant culture of the city. I value open-mindedness, good communication, and a shared passion for classical music and fine arts. Also: mother of 2 cats :)",
       myDetails: [
         { icon: "resize-outline", label: "5'6\" (168 cm)", color: "#FF6B9D" },

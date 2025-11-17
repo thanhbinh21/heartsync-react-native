@@ -50,6 +50,8 @@ const mockMessages = [
   },
 ];
 
+import { getRandomPhoto } from "../utils/photo-utils";
+
 export default function ChatScreen() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -59,7 +61,7 @@ export default function ChatScreen() {
     user: {
       id: "1",
       name: "Emma Wilson",
-      photo: "https://i.pravatar.cc/400?img=1",
+      photo: getRandomPhoto(),
       age: 28,
     },
   };
@@ -139,7 +141,7 @@ export default function ChatScreen() {
           
           <TouchableOpacity
             style={styles.userInfo}
-            onPress={() => navigate("/profile-view", { state: { user: matchedUser } })}
+            onPress={() => navigate(`/user-detail/${matchedUser?.id}`, { state: { user: matchedUser } })}
           >
             <Image source={{ uri: matchedUser?.photo }} style={styles.userAvatar} />
             <View>

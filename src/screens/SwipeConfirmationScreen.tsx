@@ -16,6 +16,7 @@ import { useNavigate, useLocation } from "react-router-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { matchService } from "../services/match.service";
+import { getRandomPhoto } from "../utils/photo-utils";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -31,7 +32,7 @@ export default function SwipeConfirmationScreen() {
   const user = swipedUser || {
     name: "Rachel Miller",
     age: 28,
-    photo: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=600",
+    photo: getRandomPhoto(),
     verified: true,
     jobTitle: "Freelance model",
     tags: ["she/her/hers"]

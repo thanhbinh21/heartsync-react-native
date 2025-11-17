@@ -1,5 +1,6 @@
 import { apiClient } from './api-client';
 import { User, Match, SwipeRequest, SwipeResponse, LikeType, DiscoverUser } from '../types/api';
+import { getRandomPhotos } from '../utils/photo-utils';
 
 export const matchService = {
   /**
@@ -17,8 +18,8 @@ export const matchService = {
       
       // Mock data với avatar người thật từ multiple sources
       const mockUsers: DiscoverUser[] = Array.from({ length: 10 }, (_, i) => {
-        // Sử dụng ID cố định cho mỗi user để ảnh không thay đổi mỗi lần load
-        const avatarId = 10 + i;
+        // Sử dụng Pinterest photos từ photo-utils
+        const userPhotos = getRandomPhotos(3);
         
         return {
           id: `mock-user-${i + 1}`,
@@ -36,11 +37,7 @@ export const matchService = {
             'Fitness freak | Healthy lifestyle 🥗',
             'Art lover 🎨 | Coffee connoisseur ☕'
           ][i],
-          photos: [
-            `https://i.pravatar.cc/400?img=${avatarId}`,
-            `https://i.pravatar.cc/400?img=${avatarId + 10}`,
-            `https://i.pravatar.cc/400?img=${avatarId + 20}`
-          ],
+          photos: userPhotos,
           location: ['Hà Nội', 'TP.HCM', 'Đà Nẵng', 'Hải Phòng'][Math.floor(Math.random() * 4)],
           job: ['Designer', 'Engineer', 'Teacher', 'Doctor', 'Marketer', 'Chef', 'Artist', 'Photographer', 'Writer', 'Entrepreneur'][i],
           interests: [

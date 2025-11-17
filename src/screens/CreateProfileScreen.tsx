@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigate } from "react-router-native";
+import { useNavigate, useLocation } from "react-router-native";
 import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 import { userService } from "../services/user.service";
@@ -44,6 +44,8 @@ const convertImageToBase64 = async (uri: string): Promise<string> => {
 
 export default function CreateProfileScreen() {
   const navigate = useNavigate();
+  const routeLocation = useLocation();
+  const returnTo = routeLocation.state?.returnTo;
   const { user, logout } = useAuthContext();
   const [photos, setPhotos] = useState<string[]>([]);
   const [aboutMe, setAboutMe] = useState("");
@@ -225,12 +227,9 @@ export default function CreateProfileScreen() {
       const result = await userService.updateProfile(profileData);
       console.log("✅ Profile update successful:", result.profile?.name);
       
-      // Get user ID for navigation
-      const userId = user?.id || result.id;
-      console.log("📱 Profile saved successfully, navigating to ProfileViewScreen with userId:", userId);
-      
-      // Navigate directly to ProfileViewScreen
-      navigate(`/profile-view/${userId}`);
+      // Always navigate to UserDetailScreen after save
+      console.log("📱 Profile saved successfully, navigating to UserDetailScreen");
+      navigate(`/user-detail`);
     } catch (error: any) {
       console.error("❌ Error saving profile:", error);
       
